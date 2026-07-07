@@ -1,54 +1,71 @@
 "use client";
 
 import { useState } from "react";
+import { AppShell } from "../../components/layout/AppShell";
+import KPICards from "../../components/admin/KPICards";
 import Registrations from "../../components/admin/Registrations";
 import Statistics from "../../components/admin/Statistics";
 
+type Tab = "registrations" | "statistics";
+
+const TABS: { id: Tab; label: string }[] = [
+  { id: "registrations", label: "Registrations" },
+  { id: "statistics", label: "Statistics" },
+];
+
 const AdminDashboard = () => {
-    const [activeTab, setActiveTab] = useState<"registrations" | "stats">("registrations");
+  const [activeTab, setActiveTab] = useState<Tab>("registrations");
 
-    return (
-        <div className="p-6">
-            <h1 className="text-3xl font-bold mb-6">Admin Dashboard</h1>
+  return (
+    <AppShell title="Dashboard">
+      <div className="space-y-4 max-w-7xl mx-auto relative z-10">
+        {/* KPI row */}
+        <KPICards />
 
-            <div className="mb-6 flex w-fit rounded-md border border-gray-200 bg-gray-50 p-1 text-sm">
+        {/* Tabbed panel */}
+        <div className="apple-card p-0 sm:p-0 overflow-hidden">
+          {/* Tab bar */}
+          <div className="border-b border-border/50 bg-muted/20 px-4 pt-3">
+            <div role="tablist" className="flex gap-4">
+              {TABS.map(({ id, label }) => (
                 <button
-                    type="button"
-                    aria-pressed={activeTab === "registrations"}
-                    onClick={() => setActiveTab("registrations")}
-                    className={`rounded px-4 py-2 font-medium transition ${
-                        activeTab === "registrations"
-                            ? "bg-white text-gray-950 shadow-sm"
-                            : "text-gray-600 hover:text-gray-950"
-                    }`}
+                  key={id}
+                  type="button"
+                  id={`tab-${id}`}
+                  role="tab"
+                  aria-selected={activeTab === id}
+                  aria-controls={`panel-${id}`}
+                  onClick={() => setActiveTab(id)}
+                  className={[
+                    "relative pb-3 text-[14px] font-semibold transition-colors",
+                    activeTab === id
+                      ? "text-primary"
+                      : "text-muted-foreground hover:text-foreground",
+                  ].join(" ")}
                 >
-                    Registrations
+                  {label}
+                  {activeTab === id && (
+                    <span className="absolute bottom-0 left-0 right-0 h-[2px] rounded-t-full bg-primary glow-border" />
+                  )}
                 </button>
-                <button
-                    type="button"
-                    aria-pressed={activeTab === "stats"}
-                    onClick={() => setActiveTab("stats")}
-                    className={`rounded px-4 py-2 font-medium transition ${
-                        activeTab === "stats"
-                            ? "bg-white text-gray-950 shadow-sm"
-                            : "text-gray-600 hover:text-gray-950"
-                    }`}
-                >
-                    Statistics
-                </button>
+              ))}
             </div>
+          </div>
 
-            {activeTab === "registrations" ? (
-                <section>
-                    <Registrations />
-                </section>
-            ) : (
-                <section>
-                    <Statistics />
-                </section>
-            )}
+          {/* Tab panel */}
+          <div
+            id={`panel-${activeTab}`}
+            role="tabpanel"
+            aria-labelledby={`tab-${activeTab}`}
+            className="p-4 lg:p-6"
+          >
+            {activeTab === "registrations" ? <Registrations /> : <Statistics />}
+          </div>
         </div>
-    );
+      </div>
+    </AppShell>
+  );
 };
 
 export default AdminDashboard;
+

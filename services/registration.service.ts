@@ -1,43 +1,45 @@
-import { PrismaClient } from '@prisma/client';
+import prisma from '../lib/prisma';
 
-const prisma = new PrismaClient();
-
-export async function saveRegistration(data: any) {
-  // Check for duplicate email
-  const existingCustomer = await prisma.Registration.findUnique({
-    where: { email: data.email },
+export async function saveRegistration(data: {
+  customerId: string;
+  eventId: string;
+}) {
+  // Check for existing registration for this customer+event
+  const existingRegistration = await prisma.registration.findFirst({
+    where: {
+      customerId: data.customerId,
+      eventId: data.eventId,
+    },
   });
 
-  if (existingCustomer) {
-    throw new Error('A customer with this email is already registered.');
+  if (existingRegistration) {
+    throw new Error('This customer is already registered for this event.');
   }
 
-  // Check blacklist
-  const blacklisted = await prisma.Blacklist.findUnique({
-    where: { email: data.email },
+  // Check if customer's linked user email is blacklisted
+  const customer = await prisma.customer.findUnique({
+    where: { id: data.customerId },
+    include: { user: true },
   });
 
-  if (blacklisted) {
-    throw new Error('This email is blacklisted.');
+  if (customer?.user?.email) {
+    const blacklisted = await prisma.blacklist.findUnique({
+      where: { email: customer.user.email },
+    });
+
+    if (blacklisted?.active) {
+      throw new Error('This customer is blacklisted.');
+    }
   }
 
-  // Save registration with status Pending
-  const newRegistration = await prisma.Registration.create({
+  // Save registration with status PENDING
+  const newRegistration = await prisma.registration.create({
     data: {
-      firstName: data.firstName,
-      lastName: data.lastName,
-      email: data.email,
-      phone: data.phone,
-      jobPosition: data.jobPosition,
-      company: data.company,
-      travelMethod: data.travelMethod,
-      needHotel: data.needHotel,
-      plannedUpgrade: data.plannedUpgrade,
-      projectByYear: data.projectByYear,
-      salesOwner: data.salesOwner,
+      customerId: data.customerId,
+      eventId: data.eventId,
       status: 'PENDING',
     },
   });
 
   return newRegistration;
-}
+}
