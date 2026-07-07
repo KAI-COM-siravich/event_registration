@@ -1,0 +1,156 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id         String   @id @default(cuid())
+  email      String   @unique
+  phone      String?  @unique
+  firstName  String
+  lastName   String
+  company    String?
+  role       Role     @default(CUSTOMER)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  registrations Registration[]
+  sales       Sales[]
+  auditLogs   AuditLog[]
+  lineAccount LineAccount?
+}
+
+enum Role {
+  ADMIN
+  STAFF
+  CUSTOMER
+}
+
+model Sales {
+  id         String   @id @default(cuid())
+  ownerId    String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  owner      User     @relation(fields: [ownerId], references: [id])
+}
+
+model Customer {
+  id         String   @id @default(cuid())
+  userId     String   @unique
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  user       User     @relation(fields: [userId], references: [id])
+}
+
+model Event {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  date        DateTime
+  location    String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  registrations Registration[]
+  booths       Booth[]
+}
+
+model Registration {
+  id             String   @id @default(cuid())
+  customerId     String
+  eventId        String
+  status         RegistrationStatus @default(PENDING)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  customer       Customer  @relation(fields: [customerId], references: [id])
+  event          Event     @relation(fields: [eventId], references: [id])
+  qrCode         QRCode?
+  checkIn        CheckIn?
+
+  @@index([customerId, eventId], name: "registration_customer_event_idx")
+}
+
+enum RegistrationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  CHECKEDIN
+  CANCELLED
+}
+
+model Blacklist {
+  id         String    @id @default(cuid())
+  email      String?   @unique
+  phone      String?   @unique
+  company    String?
+  reason     String
+  active     Boolean   @default(true)
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+}
+
+model QRCode {
+  id             String   @id @default(cuid())
+  registrationId String   @unique
+  token          String   @unique @default(uuid())
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  registration   Registration @relation(fields: [registrationId], references: [id])
+}
+
+model CheckIn {
+  id             String   @id @default(cuid())
+  registrationId String   @unique
+  date           DateTime @default(now())
+  badgePrinted   Boolean  @default(false)
+  createdAt      DateTime @default(now())
+  registration   Registration @relation(fields: [registrationId], references: [id])
+}
+
+model Booth {
+  id        String    @id @default(cuid())
+  name      String
+  eventId   String
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  event     Event     @relation(fields: [eventId], references: [id])
+  visits    BoothVisit[]
+}
+
+model BoothVisit {
+  id        String    @id @default(cuid())
+  boothId   String
+  customerId String
+  timestamp DateTime  @default(now())
+  booth     Booth     @relation(fields: [boothId], references: [id])
+  customer  Customer  @relation(fields: [customerId], references: [id])
+  @@unique([boothId, customerId], name: "unique_booth_visit")
+}
+
+model Reward {
+  id         String    @id @default(cuid())
+  customerId String
+  eventId    String
+  createdAt  DateTime @default(now())
+  customer   Customer  @relation(fields: [customerId], references: [id])
+  event      Event     @relation(fields: [eventId], references: [id])
+}
+
+model LineAccount {
+  id         String    @id @default(cuid())
+  userId     String    @unique
+  lineUserId String    @unique
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  user       User      @relation(fields: [userId], references: [id])
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String
+  action    String
+  timestamp DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id])
+}
+
