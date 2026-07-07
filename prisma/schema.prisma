@@ -7,19 +7,20 @@ datasource db {
 }
 
 model User {
-  id         String   @id @default(cuid())
-  email      String   @unique
-  phone      String?  @unique
-  firstName  String
-  lastName   String
-  company    String?
-  role       Role     @default(CUSTOMER)
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-  registrations Registration[]
+  id        String   @id @default(cuid())
+  email     String   @unique
+  phone     String?  @unique
+  firstName String
+  lastName  String
+  company   String?
+  role      Role     @default(CUSTOMER)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   sales       Sales[]
   auditLogs   AuditLog[]
   lineAccount LineAccount?
+  customers   Customer[]   @relation("UserToCustomer")
 }
 
 enum Role {
@@ -29,19 +30,23 @@ enum Role {
 }
 
 model Sales {
-  id         String   @id @default(cuid())
-  ownerId    String
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-  owner      User     @relation(fields: [ownerId], references: [id])
+  id        String   @id @default(cuid())
+  ownerId   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  owner     User     @relation(fields: [ownerId], references: [id])
 }
 
 model Customer {
-  id         String   @id @default(cuid())
-  userId     String   @unique
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-  user       User     @relation(fields: [userId], references: [id])
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user          User           @relation("UserToCustomer", fields: [userId], references: [id])
+  registrations Registration[] @relation("CustomerToRegistration")
+  boothVisits   BoothVisit[]   @relation("CustomerToBoothVisit")
+  rewards       Reward[]       @relation("CustomerToReward")
 }
 
 model Event {
@@ -52,21 +57,24 @@ model Event {
   location    String
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-  registrations Registration[]
-  booths       Booth[]
+
+  registrations Registration[] @relation("EventToRegistration")
+  booths        Booth[]
+  rewards       Reward[]       @relation("EventToReward")
 }
 
 model Registration {
-  id             String   @id @default(cuid())
-  customerId     String
-  eventId        String
-  status         RegistrationStatus @default(PENDING)
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-  customer       Customer  @relation(fields: [customerId], references: [id])
-  event          Event     @relation(fields: [eventId], references: [id])
-  qrCode         QRCode?
-  checkIn        CheckIn?
+  id         String             @id @default(cuid())
+  customerId String
+  eventId    String
+  status     RegistrationStatus @default(PENDING)
+  createdAt  DateTime           @default(now())
+  updatedAt  DateTime           @updatedAt
+
+  customer Customer @relation("CustomerToRegistration", fields: [customerId], references: [id])
+  event    Event    @relation("EventToRegistration", fields: [eventId], references: [id])
+  qrCode   QRCode?
+  checkIn  CheckIn?
 
   @@index([customerId, eventId], name: "registration_customer_event_idx")
 }
@@ -80,70 +88,72 @@ enum RegistrationStatus {
 }
 
 model Blacklist {
-  id         String    @id @default(cuid())
-  email      String?   @unique
-  phone      String?   @unique
-  company    String?
-  reason     String
-  active     Boolean   @default(true)
-  createdAt  DateTime  @default(now())
-  updatedAt  DateTime  @updatedAt
+  id        String   @id @default(cuid())
+  email     String?  @unique
+  phone     String?  @unique
+  company   String?
+  reason    String
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model QRCode {
-  id             String   @id @default(cuid())
-  registrationId String   @unique
-  token          String   @unique @default(uuid())
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  id             String       @id @default(cuid())
+  registrationId String       @unique
+  token          String       @unique @default(uuid())
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
   registration   Registration @relation(fields: [registrationId], references: [id])
 }
 
 model CheckIn {
-  id             String   @id @default(cuid())
-  registrationId String   @unique
-  date           DateTime @default(now())
-  badgePrinted   Boolean  @default(false)
-  createdAt      DateTime @default(now())
+  id             String       @id @default(cuid())
+  registrationId String       @unique
+  date           DateTime     @default(now())
+  badgePrinted   Boolean      @default(false)
+  createdAt      DateTime     @default(now())
   registration   Registration @relation(fields: [registrationId], references: [id])
 }
 
 model Booth {
-  id        String    @id @default(cuid())
+  id        String       @id @default(cuid())
   name      String
   eventId   String
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  event     Event     @relation(fields: [eventId], references: [id])
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+  event     Event        @relation(fields: [eventId], references: [id])
   visits    BoothVisit[]
 }
 
 model BoothVisit {
-  id        String    @id @default(cuid())
-  boothId   String
+  id         String   @id @default(cuid())
+  boothId    String
   customerId String
-  timestamp DateTime  @default(now())
-  booth     Booth     @relation(fields: [boothId], references: [id])
-  customer  Customer  @relation(fields: [customerId], references: [id])
+  timestamp  DateTime @default(now())
+  booth      Booth    @relation(fields: [boothId], references: [id])
+  customer   Customer @relation("CustomerToBoothVisit", fields: [customerId], references: [id])
+
   @@unique([boothId, customerId], name: "unique_booth_visit")
 }
 
 model Reward {
-  id         String    @id @default(cuid())
+  id         String   @id @default(cuid())
   customerId String
   eventId    String
   createdAt  DateTime @default(now())
-  customer   Customer  @relation(fields: [customerId], references: [id])
-  event      Event     @relation(fields: [eventId], references: [id])
+
+  customer Customer @relation("CustomerToReward", fields: [customerId], references: [id])
+  event    Event    @relation("EventToReward", fields: [eventId], references: [id])
 }
 
 model LineAccount {
-  id         String    @id @default(cuid())
-  userId     String    @unique
-  lineUserId String    @unique
-  createdAt  DateTime  @default(now())
-  updatedAt  DateTime  @updatedAt
-  user       User      @relation(fields: [userId], references: [id])
+  id         String   @id @default(cuid())
+  userId     String   @unique
+  lineUserId String   @unique
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  user       User     @relation(fields: [userId], references: [id])
 }
 
 model AuditLog {
@@ -153,4 +163,3 @@ model AuditLog {
   timestamp DateTime @default(now())
   user      User     @relation(fields: [userId], references: [id])
 }
-
