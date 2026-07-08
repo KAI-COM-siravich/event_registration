@@ -26,6 +26,9 @@ export default function SettingsPage() {
     ID_PREFIX_BOOTHVISIT: "BTV-",
     ID_PREFIX_REWARD: "RWD-",
     ID_PREFIX_BLACKLIST: "BLK-",
+    AZURE_AD_CLIENT_ID: "",
+    AZURE_AD_CLIENT_SECRET: "",
+    AZURE_AD_TENANT_ID: "",
   });
   const [loading, setLoading] = useState(true);
   const [savingApi, setSavingApi] = useState(false);
@@ -58,6 +61,9 @@ export default function SettingsPage() {
             ID_PREFIX_BOOTHVISIT: data.ID_PREFIX_BOOTHVISIT || "BTV-",
             ID_PREFIX_REWARD: data.ID_PREFIX_REWARD || "RWD-",
             ID_PREFIX_BLACKLIST: data.ID_PREFIX_BLACKLIST || "BLK-",
+            AZURE_AD_CLIENT_ID: data.AZURE_AD_CLIENT_ID || "",
+            AZURE_AD_CLIENT_SECRET: data.AZURE_AD_CLIENT_SECRET || "",
+            AZURE_AD_TENANT_ID: data.AZURE_AD_TENANT_ID || "",
           });
         }
       })
@@ -284,6 +290,83 @@ export default function SettingsPage() {
               </form>
             )}
           </div>
+          
+          {/* Form 3: Authentication (Azure AD) */}
+          <div className="apple-card p-4 sm:p-6 shadow-sm border border-border/50">
+            <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-xl bg-orange-500/10">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 21 21">
+                <rect x="1" y="1" width="9" height="9" fill="#f25022" />
+                <rect x="11" y="1" width="9" height="9" fill="#7fba00" />
+                <rect x="1" y="11" width="9" height="9" fill="#00a4ef" />
+                <rect x="11" y="11" width="9" height="9" fill="#ffb900" />
+              </svg>
+            </div>
+            <h3 className="text-lg font-semibold tracking-tight text-foreground">
+              Authentication Settings
+            </h3>
+            <p className="mb-6 mt-2 text-[15px] text-muted-foreground">
+              Configure Microsoft Azure AD credentials for Admin & Staff login. Note: Changes take effect on the next login attempt.
+            </p>
+            
+            {loading ? (
+              <div className="flex h-32 items-center justify-center">
+                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+              </div>
+            ) : (
+              <form onSubmit={(e) => handleSaveConfig(e, 'api')} className="space-y-4">
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div>
+                    <label className="mb-1 block text-sm font-medium text-foreground">Azure AD Tenant ID</label>
+                    <input
+                      type="text"
+                      className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm focus:ring-2 focus:ring-primary"
+                      value={apiConfig.AZURE_AD_TENANT_ID}
+                      onChange={(e) => setApiConfig({ ...apiConfig, AZURE_AD_TENANT_ID: e.target.value })}
+                      placeholder="e.g. 8eaef023-..."
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-sm font-medium text-foreground">Azure AD Client ID</label>
+                    <input
+                      type="text"
+                      className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm focus:ring-2 focus:ring-primary"
+                      value={apiConfig.AZURE_AD_CLIENT_ID}
+                      onChange={(e) => setApiConfig({ ...apiConfig, AZURE_AD_CLIENT_ID: e.target.value })}
+                      placeholder="e.g. 1a2b3c4d-..."
+                    />
+                  </div>
+                  <div className="sm:col-span-2">
+                    <label className="mb-1 block text-sm font-medium text-foreground">Azure AD Client Secret</label>
+                    <input
+                      type="password"
+                      className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm focus:ring-2 focus:ring-primary"
+                      value={apiConfig.AZURE_AD_CLIENT_SECRET}
+                      onChange={(e) => setApiConfig({ ...apiConfig, AZURE_AD_CLIENT_SECRET: e.target.value })}
+                      placeholder="Leave blank to use environment variable fallback"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex flex-col gap-3 pt-4 border-t border-border mt-4">
+                  {message.apiType === 'success' && (
+                    <p className="text-sm font-medium text-emerald-600">{message.apiText}</p>
+                  )}
+                  {message.apiType === 'error' && (
+                    <p className="text-sm font-medium text-red-600">{message.apiText}</p>
+                  )}
+                  <button
+                    type="submit"
+                    disabled={savingApi}
+                    className="flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50 transition-colors sm:w-auto sm:self-end"
+                  >
+                    {savingApi ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                    Save Auth Settings
+                  </button>
+                </div>
+              </form>
+            )}
+          </div>
+
         </div>
 
         {/* ID Prefixes Card */}

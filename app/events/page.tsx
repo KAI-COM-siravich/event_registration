@@ -246,104 +246,54 @@ export default function EventsPage() {
           </div>
         )}
 
-        <div className="apple-card overflow-hidden">
-          <div className="overflow-x-auto">
+        {/* Mobile: card grid | Desktop: table */}
+        <div className="apple-card overflow-hidden p-0 sm:p-0">
+          {/* Desktop table */}
+          <div className="hidden sm:block overflow-x-auto">
             <table className="w-full text-left text-sm">
               <thead className="bg-muted/50 text-muted-foreground border-b border-border/50">
                 <tr>
                   <th className="px-4 py-3 font-medium sm:px-6">Event Name</th>
                   <th className="px-4 py-3 font-medium sm:px-6">Date</th>
                   <th className="px-4 py-3 font-medium sm:px-6">Location</th>
-                  <th className="px-4 py-3 font-medium text-right sm:px-6">
-                    Actions
-                  </th>
+                  <th className="px-4 py-3 font-medium text-right sm:px-6">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border/50 bg-background/50">
                 {loading ? (
                   <tr>
-                    <td
-                      colSpan={4}
-                      className="px-6 py-12 text-center text-muted-foreground"
-                    >
+                    <td colSpan={4} className="px-6 py-12 text-center text-muted-foreground">
                       <Loader2 className="mx-auto h-6 w-6 animate-spin mb-2" />
                       Loading events...
                     </td>
                   </tr>
                 ) : error ? (
                   <tr>
-                    <td
-                      colSpan={4}
-                      className="px-6 py-12 text-center text-red-500"
-                    >
-                      Failed to load events.
-                    </td>
+                    <td colSpan={4} className="px-6 py-12 text-center text-red-500">Failed to load events.</td>
                   </tr>
                 ) : events.length === 0 ? (
                   <tr>
-                    <td
-                      colSpan={4}
-                      className="px-6 py-12 text-center text-muted-foreground"
-                    >
-                      No events found.
-                    </td>
+                    <td colSpan={4} className="px-6 py-12 text-center text-muted-foreground">No events found.</td>
                   </tr>
                 ) : (
                   events.map((event) => (
-                    <tr
-                      key={event.id}
-                      className="transition-colors hover:bg-muted/30 group cursor-pointer"
-                      onClick={(e) => {
-                        if ((e.target as HTMLElement).closest('button')) return;
-                        setViewedEvent(event);
-                      }}
-                    >
-                      <td className="px-4 py-3 font-medium text-foreground sm:px-6 group-hover:text-primary transition-colors">
-                        {event.name}
-                      </td>
+                    <tr key={event.id} className="transition-colors hover:bg-muted/30 group cursor-pointer"
+                      onClick={(e) => { if ((e.target as HTMLElement).closest('button')) return; setViewedEvent(event); }}>
+                      <td className="px-4 py-3 font-medium text-foreground sm:px-6 group-hover:text-primary transition-colors">{event.name}</td>
                       <td className="px-4 py-3 text-muted-foreground sm:px-6 whitespace-nowrap">
-                        {new Date(event.date).toLocaleDateString("en-US", {
-                          year: "numeric",
-                          month: "short",
-                          day: "numeric",
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })}
+                        {new Date(event.date).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
                       </td>
-                      <td className="px-4 py-3 text-muted-foreground sm:px-6">
-                        {event.location}
-                      </td>
+                      <td className="px-4 py-3 text-muted-foreground sm:px-6">{event.location}</td>
                       <td className="px-4 py-3 text-right sm:px-6">
                         <div className="flex items-center justify-end gap-2">
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setViewedEvent(event);
-                            }}
-                            className="p-2 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-lg transition-colors"
-                            title="View Details"
-                          >
+                          <button onClick={(e) => { e.stopPropagation(); setViewedEvent(event); }} className="p-2 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-lg transition-colors" title="View Details">
                             <Eye className="h-4 w-4" />
                           </button>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              openEditForm(event);
-                            }}
-                            className="inline-flex h-8 items-center justify-center gap-1 rounded-lg bg-blue-500/10 px-3 text-xs font-medium text-blue-500 hover:bg-blue-500/20 transition-colors"
-                          >
-                            <Edit2 className="h-3.5 w-3.5" />
-                            Edit
+                          <button onClick={(e) => { e.stopPropagation(); openEditForm(event); }} className="inline-flex h-8 items-center justify-center gap-1 rounded-lg bg-blue-500/10 px-3 text-xs font-medium text-blue-500 hover:bg-blue-500/20 transition-colors">
+                            <Edit2 className="h-3.5 w-3.5" /> Edit
                           </button>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleDelete(event.id);
-                            }}
-                            className="inline-flex h-8 items-center justify-center gap-1 rounded-lg bg-red-500/10 px-3 text-xs font-medium text-red-500 hover:bg-red-500/20 transition-colors"
-                          >
-                            <Trash2 className="h-3.5 w-3.5" />
-                            Delete
+                          <button onClick={(e) => { e.stopPropagation(); handleDelete(event.id); }} className="inline-flex h-8 items-center justify-center gap-1 rounded-lg bg-red-500/10 px-3 text-xs font-medium text-red-500 hover:bg-red-500/20 transition-colors">
+                            <Trash2 className="h-3.5 w-3.5" /> Delete
                           </button>
                         </div>
                       </td>
@@ -353,7 +303,52 @@ export default function EventsPage() {
               </tbody>
             </table>
           </div>
+
+          {/* Mobile: card list */}
+          <div className="sm:hidden divide-y divide-border/50">
+            {loading ? (
+              Array.from({ length: 3 }).map((_, i) => (
+                <div key={i} className="flex items-center gap-4 p-4 animate-pulse">
+                  <div className="h-10 w-10 rounded-xl bg-muted shrink-0" />
+                  <div className="flex-1 space-y-2">
+                    <div className="h-3.5 w-36 rounded bg-muted" />
+                    <div className="h-3 w-24 rounded bg-muted" />
+                  </div>
+                </div>
+              ))
+            ) : events.length === 0 ? (
+              <div className="py-16 text-center">
+                <CalendarDays className="mx-auto h-10 w-10 text-muted-foreground/30 mb-3" />
+                <p className="text-muted-foreground">No events found.</p>
+              </div>
+            ) : (
+              events.map((event) => (
+                <div key={event.id} className="p-4 flex items-start gap-3 cursor-pointer active:bg-muted/30 transition-colors"
+                  onClick={() => setViewedEvent(event)}>
+                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                    <CalendarDays className="h-5 w-5" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[15px] font-semibold text-foreground truncate">{event.name}</p>
+                    <p className="text-[12px] text-muted-foreground mt-0.5">{event.location}</p>
+                    <p className="text-[12px] text-muted-foreground">
+                      {new Date(event.date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-1 shrink-0">
+                    <button onClick={(e) => { e.stopPropagation(); openEditForm(event); }} className="p-2 text-blue-500 hover:bg-blue-500/10 rounded-lg transition-colors">
+                      <Edit2 className="h-4 w-4" />
+                    </button>
+                    <button onClick={(e) => { e.stopPropagation(); handleDelete(event.id); }} className="p-2 text-red-500 hover:bg-red-500/10 rounded-lg transition-colors">
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
         </div>
+
       </div>
       <DetailModal
         isOpen={!!viewedEvent}

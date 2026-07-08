@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import prisma from "@/lib/prisma";
 import { QRCodeSVG } from "qrcode.react";
-import { CalendarDays, MapPin, User, CheckCircle2 } from "lucide-react";
+import { CalendarDays, MapPin, User, CheckCircle2, Building2 } from "lucide-react";
 
 export default async function TicketPage({
   params,
@@ -30,76 +30,118 @@ export default async function TicketPage({
   const { event, customer } = registration;
   const { user } = customer;
 
+  const fullName = [user.firstName, user.lastName].filter(Boolean).join(" ");
+
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-background px-4 py-12 sm:px-6 lg:px-8">
-      <div className="w-full max-w-md overflow-hidden rounded-3xl border border-border/50 bg-card shadow-2xl animate-in zoom-in-95 duration-500">
+    <div className="flex min-h-screen flex-col items-center justify-center bg-background linear-grid px-4 py-8 sm:py-12">
+      {/* Apple Wallet-style card */}
+      <div className="w-full max-w-[390px] overflow-hidden rounded-[2rem] shadow-[0_32px_80px_rgba(0,0,0,0.25)] animate-in zoom-in-95 fade-in duration-500">
         
-        {/* Header */}
-        <div className="bg-primary px-6 py-8 text-center relative overflow-hidden">
-          <div className="absolute top-0 left-0 w-full h-full bg-linear-to-br from-white/10 to-transparent"></div>
-          <h1 className="relative text-2xl font-bold tracking-tight text-primary-foreground">
-            {event.name}
-          </h1>
-          <p className="relative mt-2 text-primary-foreground/80 font-medium">
-            Attendee Ticket
-          </p>
+        {/* Card header — gradient */}
+        <div
+          className="relative overflow-hidden px-6 py-8 text-white"
+          style={{
+            background: "linear-gradient(135deg, #0057b8 0%, #0071E3 50%, #5856D6 100%)",
+          }}
+        >
+          {/* Decorative orbs */}
+          <div className="absolute -top-8 -right-8 h-40 w-40 rounded-full bg-white/10 blur-2xl" />
+          <div className="absolute -bottom-4 -left-4 h-24 w-24 rounded-full bg-white/10 blur-xl" />
+
+          <div className="relative">
+            <p className="text-[13px] font-semibold uppercase tracking-widest text-white/60 mb-2">
+              Event Ticket
+            </p>
+            <h1 className="text-2xl font-bold tracking-tight leading-tight mb-1">
+              {event.name}
+            </h1>
+            <p className="text-[14px] text-white/70 font-medium">
+              {event.date ? new Date(event.date).toLocaleDateString("en-US", {
+                weekday: "short",
+                year: "numeric",
+                month: "long",
+                day: "numeric",
+              }) : "Date TBA"}
+            </p>
+          </div>
+
+          {/* Status badge */}
+          <div className="relative mt-4 inline-flex items-center gap-1.5 rounded-full bg-white/20 backdrop-blur-sm px-3 py-1 text-[12px] font-semibold text-white">
+            <CheckCircle2 className="h-3.5 w-3.5" />
+            Approved
+          </div>
         </div>
 
-        {/* Details */}
-        <div className="px-6 py-6 space-y-6 bg-card relative">
-          
-          <div className="flex justify-center -mt-12">
-            <div className="bg-white p-4 rounded-2xl shadow-xl">
-              <QRCodeSVG
-                value={token}
-                size={200}
-                bgColor={"#ffffff"}
-                fgColor={"#000000"}
-                level={"H"}
-                includeMargin={false}
-              />
-            </div>
+        {/* QR Code section */}
+        <div className="bg-white dark:bg-zinc-900 px-6 py-8 flex flex-col items-center gap-6">
+          {/* Large QR */}
+          <div className="bg-white p-4 rounded-2xl shadow-[0_4px_24px_rgba(0,0,0,0.12)]">
+            <QRCodeSVG
+              value={token}
+              size={220}
+              bgColor={"#ffffff"}
+              fgColor={"#000000"}
+              level={"H"}
+              includeMargin={false}
+            />
           </div>
 
-          <div className="text-center mt-2">
-            <div className="inline-flex items-center gap-1.5 rounded-full bg-emerald-100 px-3 py-1 text-sm font-medium text-emerald-800">
-              <CheckCircle2 className="h-4 w-4" />
-              Registration Approved
-            </div>
+          <p className="text-[12px] text-muted-foreground text-center font-mono tracking-wider">
+            {token.slice(0, 8)}...{token.slice(-8)}
+          </p>
+
+          {/* Divider — perforated style */}
+          <div className="w-full flex items-center gap-3">
+            <div className="h-px flex-1 border-t border-dashed border-border" />
+            <span className="text-[11px] text-muted-foreground font-medium uppercase tracking-widest">
+              Attendee
+            </span>
+            <div className="h-px flex-1 border-t border-dashed border-border" />
           </div>
 
-          <div className="space-y-4 rounded-xl bg-muted/30 p-5">
-            <div className="flex items-start gap-3">
-              <User className="h-5 w-5 text-primary shrink-0 mt-0.5" />
-              <div>
-                <p className="text-sm font-medium text-foreground">
-                  {user.firstName} {user.lastName}
-                </p>
-                <p className="text-[13px] text-muted-foreground">{user.company || "Guest"}</p>
+          {/* Attendee info */}
+          <div className="w-full space-y-3">
+            <div className="flex items-center gap-3">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/10">
+                <User className="h-4 w-4 text-primary" />
               </div>
-            </div>
-            
-            <div className="flex items-start gap-3">
-              <CalendarDays className="h-5 w-5 text-primary shrink-0 mt-0.5" />
               <div>
-                <p className="text-sm font-medium text-foreground">Date</p>
-                <p className="text-[13px] text-muted-foreground">
-                  {event.date ? new Date(event.date).toLocaleDateString() : "TBA"}
-                </p>
+                <p className="text-[15px] font-semibold text-foreground">{fullName}</p>
+                <p className="text-[13px] text-muted-foreground">{user.email}</p>
               </div>
             </div>
 
-            <div className="flex items-start gap-3">
-              <MapPin className="h-5 w-5 text-primary shrink-0 mt-0.5" />
-              <div>
-                <p className="text-sm font-medium text-foreground">Location</p>
-                <p className="text-[13px] text-muted-foreground">{event.location}</p>
+            {user.company && (
+              <div className="flex items-center gap-3">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-muted">
+                  <Building2 className="h-4 w-4 text-muted-foreground" />
+                </div>
+                <p className="text-[14px] text-foreground font-medium">{user.company}</p>
               </div>
+            )}
+
+            <div className="flex items-center gap-3">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-muted">
+                <MapPin className="h-4 w-4 text-muted-foreground" />
+              </div>
+              <p className="text-[14px] text-foreground font-medium">{event.location}</p>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-muted">
+                <CalendarDays className="h-4 w-4 text-muted-foreground" />
+              </div>
+              <p className="text-[14px] text-foreground font-medium">
+                {event.date ? new Date(event.date).toLocaleTimeString("en-US", {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                }) : "Time TBA"}
+              </p>
             </div>
           </div>
 
-          <p className="text-center text-[13px] text-muted-foreground">
-            Please present this QR code at the event entrance and booths.
+          <p className="text-[12px] text-muted-foreground text-center pt-2">
+            Present this QR code at the entrance and booth terminals.
           </p>
         </div>
       </div>

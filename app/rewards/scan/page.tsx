@@ -87,40 +87,25 @@ export default function RewardScanPage() {
           Back to Rewards
         </button>
 
-        <div className="apple-card p-4 sm:p-5 shadow-sm border border-border/50">
-          <div className="mb-4 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-[0.6rem] bg-orange-500/10">
-                <Gift className="h-5 w-5 text-orange-500" />
-              </div>
-              <div>
-                <h2 className="text-[15px] font-semibold text-foreground tracking-tight">
-                  Reward Claim Terminal
-                </h2>
-                <p className="text-[13px] text-muted-foreground">
-                  Verify attendee and grant event rewards
-                </p>
-              </div>
+        <div className="apple-card p-4 sm:p-6 shadow-sm border border-border/50 space-y-4">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-[0.6rem] bg-orange-500/10">
+              <Gift className="h-5 w-5 text-orange-500" />
             </div>
-            <button
-              type="button"
-              onClick={() => setScannerActive(!scannerActive)}
-              className="inline-flex h-9 items-center justify-center rounded-lg bg-primary/10 px-4 text-sm font-medium text-primary transition-colors hover:bg-primary/20"
-            >
-              {scannerActive ? "Close Camera" : "Open Camera"}
-            </button>
+            <div>
+              <h2 className="text-[16px] font-semibold text-foreground tracking-tight">Reward Claim Terminal</h2>
+              <p className="text-[13px] text-muted-foreground">Verify attendee and grant event rewards</p>
+            </div>
           </div>
-          
-          <div className="mb-4">
-            <label className="text-[13px] font-medium text-muted-foreground mb-1 block">Active Event Context</label>
+
+          {/* Event selector */}
+          <div>
+            <label className="text-[13px] font-medium text-muted-foreground mb-1.5 block">Active Event Context</label>
             {eventsLoading ? (
-               <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+              <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
             ) : (
-              <select
-                value={selectedEventId}
-                onChange={(e) => setSelectedEventId(e.target.value)}
-                className="w-full rounded-lg border border-border/50 bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-              >
+              <select value={selectedEventId} onChange={(e) => setSelectedEventId(e.target.value)}
+                className="w-full rounded-xl border border-border/50 bg-background px-3 py-3 text-[15px] focus:outline-none focus:ring-2 focus:ring-primary touch-target">
                 {events.map((evt) => (
                   <option key={evt.id} value={evt.id}>{evt.name}</option>
                 ))}
@@ -128,14 +113,38 @@ export default function RewardScanPage() {
             )}
           </div>
 
-          {scannerActive && (
-            <div className="mb-4 overflow-hidden rounded-xl border border-border bg-black">
-              <Scanner
-                onScan={(result) => handleScan(result[0].rawValue)}
-                styles={{ container: { width: "100%", aspectRatio: "1/1" } }}
-              />
+          {/* Scanner area */}
+          {scannerActive ? (
+            <div className="relative overflow-hidden rounded-2xl border-2 border-orange-500/30 bg-black aspect-square">
+              <Scanner onScan={(result) => handleScan(result[0].rawValue)} styles={{ container: { width: "100%", height: "100%" } }} />
+              <div className="absolute inset-0 pointer-events-none">
+                <div className="absolute top-4 left-4 h-8 w-8 border-t-2 border-l-2 border-white rounded-tl-lg" />
+                <div className="absolute top-4 right-4 h-8 w-8 border-t-2 border-r-2 border-white rounded-tr-lg" />
+                <div className="absolute bottom-4 left-4 h-8 w-8 border-b-2 border-l-2 border-white rounded-bl-lg" />
+                <div className="absolute bottom-4 right-4 h-8 w-8 border-b-2 border-r-2 border-white rounded-br-lg" />
+              </div>
             </div>
+          ) : (
+            <button type="button" onClick={() => { setResult(null); setScannerActive(true); }}
+              className="flex flex-col items-center justify-center gap-3 rounded-[2rem] bg-orange-500/10 border-2 border-orange-500/30 text-orange-600 transition-all active:scale-[0.97] hover:bg-orange-500/15 w-full"
+              style={{ minHeight: 200 }}>
+              <div className="flex h-16 w-16 items-center justify-center rounded-[1.2rem] bg-orange-500 text-white shadow-[0_8px_24px_rgba(255,149,0,0.4)]">
+                <Gift className="h-8 w-8" />
+              </div>
+              <div className="text-center">
+                <p className="text-[17px] font-semibold">Scan for Reward</p>
+                <p className="text-[13px] opacity-70 mt-0.5">Tap to scan attendee QR code</p>
+              </div>
+            </button>
           )}
+
+          {scannerActive && (
+            <button type="button" onClick={() => setScannerActive(false)}
+              className="w-full flex items-center justify-center gap-2 py-2 text-[14px] font-medium text-muted-foreground hover:text-foreground transition-colors">
+              <X className="h-4 w-4" /> Close Camera
+            </button>
+          )}
+
 
           <form onSubmit={handleSubmit} className="flex gap-2">
             <input

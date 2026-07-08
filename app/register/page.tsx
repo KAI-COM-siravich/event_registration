@@ -12,7 +12,13 @@ export const metadata: Metadata = {
 const RegisterPage = () => {
   return (
     <div className="min-h-screen bg-background flex flex-col justify-center px-4 py-8 lg:px-6 linear-grid">
-      <div className="mx-auto w-full max-w-2xl relative z-10">
+      {/* Background gradient orbs */}
+      <div className="pointer-events-none fixed inset-0 overflow-hidden">
+        <div className="absolute -top-40 -left-40 h-96 w-96 rounded-full bg-primary/15 blur-3xl" />
+        <div className="absolute top-40 -right-40 h-96 w-96 rounded-full bg-[#EA580C]/15 blur-3xl" />
+      </div>
+
+      <div className="mx-auto w-full max-w-2xl relative z-10 animate-in fade-in zoom-in-95 duration-500">
 
         {/* Card */}
         <div className="apple-card">

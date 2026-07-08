@@ -55,7 +55,7 @@
   --card-foreground: #1D1D1F;
   --popover: rgba(255, 255, 255, 0.85);
   --popover-foreground: #1D1D1F;
-  --primary: #0071E3;
+  --primary: #F97316;
   --primary-foreground: #FFFFFF;
   --secondary: #E5E5EA;
   --secondary-foreground: #1D1D1F;
@@ -66,21 +66,21 @@
   --destructive: #FF3B30;
   --border: rgba(0, 0, 0, 0.08);
   --input: rgba(0, 0, 0, 0.08);
-  --ring: #0071E3;
-  --chart-1: #0071E3;
+  --ring: #F97316;
+  --chart-1: #F97316;
   --chart-2: #34C759;
   --chart-3: #FF9500;
   --chart-4: #FF3B30;
   --chart-5: #5856D6;
-  --radius: 0.75rem;
+  --radius: 1rem;
   --sidebar: rgba(245, 245, 247, 0.85);
   --sidebar-foreground: #1D1D1F;
-  --sidebar-primary: #0071E3;
+  --sidebar-primary: #F97316;
   --sidebar-primary-foreground: #FFFFFF;
   --sidebar-accent: rgba(0, 0, 0, 0.05);
   --sidebar-accent-foreground: #1D1D1F;
   --sidebar-border: rgba(0, 0, 0, 0.08);
-  --sidebar-ring: #0071E3;
+  --sidebar-ring: #F97316;
   --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
 }
@@ -92,7 +92,7 @@
   --card-foreground: #F5F5F7;
   --popover: rgba(28, 28, 30, 0.85);
   --popover-foreground: #F5F5F7;
-  --primary: #0A84FF;
+  --primary: #F97316;
   --primary-foreground: #FFFFFF;
   --secondary: #2C2C2E;
   --secondary-foreground: #F5F5F7;
@@ -103,20 +103,20 @@
   --destructive: #FF453A;
   --border: rgba(255, 255, 255, 0.12);
   --input: rgba(255, 255, 255, 0.12);
-  --ring: #0A84FF;
-  --chart-1: #0A84FF;
+  --ring: #F97316;
+  --chart-1: #F97316;
   --chart-2: #30D158;
   --chart-3: #FF9F0A;
   --chart-4: #FF453A;
   --chart-5: #5E5CE6;
   --sidebar: rgba(28, 28, 30, 0.85);
   --sidebar-foreground: #F5F5F7;
-  --sidebar-primary: #0A84FF;
+  --sidebar-primary: #F97316;
   --sidebar-primary-foreground: #FFFFFF;
   --sidebar-accent: rgba(255, 255, 255, 0.1);
   --sidebar-accent-foreground: #F5F5F7;
   --sidebar-border: rgba(255, 255, 255, 0.12);
-  --sidebar-ring: #0A84FF;
+  --sidebar-ring: #F97316;
 }
 
 @layer base {
@@ -132,15 +132,23 @@
 }
 
 @layer utilities {
+  /* ─── Glassmorphism ─── */
   .glass {
     @apply bg-white/40 dark:bg-black/40 border-[0.5px] border-white/20 dark:border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.08)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.4)] backdrop-blur-2xl;
   }
   .glass-panel {
     @apply bg-white/60 dark:bg-black/60 border-[0.5px] border-white/30 dark:border-white/15 backdrop-blur-[60px];
   }
+
+  /* ─── Apple Card ─── */
   .apple-card {
-    @apply bg-white/40 dark:bg-black/40 border-[0.5px] border-white/20 dark:border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.08)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.4)] backdrop-blur-2xl rounded-[1.5rem] p-4 sm:p-5;
+    @apply bg-white/40 dark:bg-black/40 border-[0.5px] border-white/20 dark:border-white/10 shadow-[0_8px_32px_rgba(249,115,22,0.03)] dark:shadow-[0_8px_32px_rgba(249,115,22,0.05)] backdrop-blur-2xl rounded-[2rem] p-4 sm:p-5;
   }
+  .apple-card-hero {
+    @apply bg-white/50 dark:bg-white/5 border-[0.5px] border-white/30 dark:border-white/10 shadow-[0_20px_60px_rgba(249,115,22,0.08)] dark:shadow-[0_20px_60px_rgba(249,115,22,0.1)] backdrop-blur-[60px] rounded-[2.5rem];
+  }
+
+  /* ─── Grid Background ─── */
   .linear-grid {
     background-size: 32px 32px;
     background-image: linear-gradient(to right, rgba(0, 0, 0, 0.04) 1px, transparent 1px),
@@ -150,9 +158,22 @@
     background-image: linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
                       linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
   }
+
+  /* ─── Gradients ─── */
   .stripe-gradient {
-    @apply bg-linear-to-tr from-[#0071E3] via-[#5856D6] to-[#FF9500];
+    @apply bg-linear-to-tr from-[#F97316] via-[#EA580C] to-[#FB923C];
   }
+  .wallet-gradient {
+    background: linear-gradient(135deg, #431407 0%, #7c2d12 40%, #ea580c 100%);
+  }
+  .wallet-gradient-green {
+    background: linear-gradient(135deg, #0a3d25 0%, #0d5c35 60%, #1a7a4a 100%);
+  }
+  .wallet-gradient-orange {
+    background: linear-gradient(135deg, #431407 0%, #7c2d12 40%, #ea580c 100%);
+  }
+
+  /* ─── Glow Border ─── */
   .glow-border {
     position: relative;
   }
@@ -171,5 +192,96 @@
   }
   .dark .glow-border::before {
     background: linear-gradient(to bottom right, rgba(255,255,255,0.3), rgba(255,255,255,0.02));
+  }
+
+  /* ─── Touch Targets (min 44×44) ─── */
+  .touch-target {
+    @apply min-h-[44px] min-w-[44px];
+  }
+  .touch-target-lg {
+    @apply min-h-[56px];
+  }
+
+  /* ─── Safe Area Insets ─── */
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  .pt-safe {
+    padding-top: env(safe-area-inset-top, 0px);
+  }
+  .mb-safe {
+    margin-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  .bottom-safe {
+    bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  /* ─── Mobile Bottom Nav ─── */
+  .bottom-nav {
+    @apply fixed bottom-0 inset-x-0 z-50 items-center justify-around border-t border-white/10 bg-white/80 dark:bg-black/80 backdrop-blur-2xl;
+    padding-bottom: max(env(safe-area-inset-bottom, 0px), 8px);
+    padding-top: 8px;
+  }
+  .bottom-nav-item {
+    @apply flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl transition-all duration-200 min-w-[56px] min-h-[44px] justify-center;
+  }
+  .bottom-nav-item.active {
+    @apply text-primary;
+  }
+  .bottom-nav-item:not(.active) {
+    @apply text-muted-foreground;
+  }
+
+  /* ─── Progress Ring ─── */
+  .progress-ring {
+    transform: rotate(-90deg);
+    transform-origin: center;
+  }
+  .progress-ring-track {
+    fill: none;
+    stroke: currentColor;
+    opacity: 0.12;
+  }
+  .progress-ring-fill {
+    fill: none;
+    stroke: currentColor;
+    stroke-linecap: round;
+    transition: stroke-dashoffset 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* ─── Mobile Content Padding (accounts for bottom nav) ─── */
+  .mobile-content {
+    @apply pb-24 lg:pb-0;
+  }
+
+  /* ─── Input / Form Mobile ─── */
+  .mobile-input {
+    @apply h-12 w-full rounded-2xl border border-border/50 bg-background/50 backdrop-blur-md px-4 text-[16px] placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-primary transition-all;
+  }
+  .mobile-btn-primary {
+    @apply h-14 w-full flex items-center justify-center rounded-2xl font-semibold text-[17px] transition-all active:scale-[0.97] disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 shadow-[0_4px_20px_rgba(0,113,227,0.4)];
+  }
+  .mobile-btn-secondary {
+    @apply h-14 w-full flex items-center justify-center rounded-2xl font-semibold text-[17px] transition-all active:scale-[0.97] disabled:opacity-50 bg-muted text-foreground hover:bg-muted/80;
+  }
+
+  /* ─── Scan Button ─── */
+  .scan-btn {
+    @apply flex flex-col items-center justify-center gap-3 rounded-[2rem] bg-primary/10 dark:bg-primary/20 border-2 border-primary/30 text-primary transition-all active:scale-[0.97] hover:bg-primary/15;
+    min-height: 200px;
+  }
+
+  /* ─── Card List (replaces table on mobile) ─── */
+  .mobile-list-item {
+    @apply flex items-center gap-4 p-4 transition-colors active:bg-muted/30 rounded-xl;
+  }
+
+  /* ─── Scroll Snap ─── */
+  .snap-x-mandatory {
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+  }
+  .snap-start {
+    scroll-snap-align: start;
   }
 }

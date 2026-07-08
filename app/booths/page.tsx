@@ -226,92 +226,42 @@ export default function BoothsPage() {
           </div>
         )}
 
-        <div className="apple-card overflow-hidden">
-          <div className="overflow-x-auto">
+        {/* Mobile: card grid | Desktop: table */}
+        <div className="apple-card overflow-hidden p-0 sm:p-0">
+          {/* Desktop table */}
+          <div className="hidden sm:block overflow-x-auto">
             <table className="w-full text-left text-sm">
               <thead className="bg-muted/50 text-muted-foreground border-b border-border/50">
                 <tr>
                   <th className="px-4 py-3 font-medium sm:px-6">Booth Name</th>
                   <th className="px-4 py-3 font-medium sm:px-6">Event</th>
-                  <th className="px-4 py-3 font-medium text-right sm:px-6">
-                    Actions
-                  </th>
+                  <th className="px-4 py-3 font-medium text-right sm:px-6">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border/50 bg-background/50">
                 {loading ? (
-                  <tr>
-                    <td
-                      colSpan={3}
-                      className="px-6 py-12 text-center text-muted-foreground"
-                    >
-                      <Loader2 className="mx-auto h-6 w-6 animate-spin mb-2" />
-                      Loading booths...
-                    </td>
-                  </tr>
+                  <tr><td colSpan={3} className="px-6 py-12 text-center text-muted-foreground"><Loader2 className="mx-auto h-6 w-6 animate-spin mb-2" />Loading booths...</td></tr>
                 ) : booths.length === 0 ? (
-                  <tr>
-                    <td
-                      colSpan={3}
-                      className="px-6 py-12 text-center text-muted-foreground"
-                    >
-                      No booths found.
-                    </td>
-                  </tr>
+                  <tr><td colSpan={3} className="px-6 py-12 text-center text-muted-foreground">No booths found.</td></tr>
                 ) : (
                   booths.map((booth) => (
-                    <tr
-                      key={booth.id}
-                      className="transition-colors hover:bg-muted/30 group cursor-pointer"
-                      onClick={(e) => {
-                        if ((e.target as HTMLElement).closest('button') || (e.target as HTMLElement).closest('a')) return;
-                        setViewedBooth(booth);
-                      }}
-                    >
-                      <td className="px-4 py-3 font-medium text-foreground sm:px-6 group-hover:text-primary transition-colors">
-                        {booth.name}
-                      </td>
-                      <td className="px-4 py-3 text-muted-foreground sm:px-6">
-                        {booth.event?.name}
-                      </td>
+                    <tr key={booth.id} className="transition-colors hover:bg-muted/30 group cursor-pointer"
+                      onClick={(e) => { if ((e.target as HTMLElement).closest('button') || (e.target as HTMLElement).closest('a')) return; setViewedBooth(booth); }}>
+                      <td className="px-4 py-3 font-medium text-foreground sm:px-6 group-hover:text-primary transition-colors">{booth.name}</td>
+                      <td className="px-4 py-3 text-muted-foreground sm:px-6">{booth.event?.name}</td>
                       <td className="px-4 py-3 text-right sm:px-6">
                         <div className="flex items-center justify-end gap-2">
-                          <Link
-                            href={`/booths/${booth.id}/scan`}
-                            className="inline-flex h-8 items-center justify-center gap-1 rounded-lg bg-emerald-500/10 px-3 text-xs font-medium text-emerald-600 hover:bg-emerald-500/20 transition-colors"
-                          >
-                            <QrCode className="h-3.5 w-3.5" />
-                            Terminal
+                          <Link href={`/booths/${booth.id}/scan`} className="inline-flex h-8 items-center justify-center gap-1 rounded-lg bg-emerald-500/10 px-3 text-xs font-medium text-emerald-600 hover:bg-emerald-500/20 transition-colors">
+                            <QrCode className="h-3.5 w-3.5" /> Terminal
                           </Link>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setViewedBooth(booth);
-                            }}
-                            className="p-2 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-lg transition-colors"
-                            title="View Details"
-                          >
+                          <button onClick={(e) => { e.stopPropagation(); setViewedBooth(booth); }} className="p-2 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-lg transition-colors">
                             <Eye className="h-4 w-4" />
                           </button>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              openEditForm(booth);
-                            }}
-                            className="inline-flex h-8 items-center justify-center gap-1 rounded-lg bg-blue-500/10 px-3 text-xs font-medium text-blue-500 hover:bg-blue-500/20 transition-colors"
-                          >
-                            <Edit2 className="h-3.5 w-3.5" />
-                            Edit
+                          <button onClick={(e) => { e.stopPropagation(); openEditForm(booth); }} className="inline-flex h-8 items-center justify-center gap-1 rounded-lg bg-blue-500/10 px-3 text-xs font-medium text-blue-500 hover:bg-blue-500/20 transition-colors">
+                            <Edit2 className="h-3.5 w-3.5" /> Edit
                           </button>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleDelete(booth.id);
-                            }}
-                            className="inline-flex h-8 items-center justify-center gap-1 rounded-lg bg-red-500/10 px-3 text-xs font-medium text-red-500 hover:bg-red-500/20 transition-colors"
-                          >
-                            <Trash2 className="h-3.5 w-3.5" />
-                            Delete
+                          <button onClick={(e) => { e.stopPropagation(); handleDelete(booth.id); }} className="inline-flex h-8 items-center justify-center gap-1 rounded-lg bg-red-500/10 px-3 text-xs font-medium text-red-500 hover:bg-red-500/20 transition-colors">
+                            <Trash2 className="h-3.5 w-3.5" /> Delete
                           </button>
                         </div>
                       </td>
@@ -321,7 +271,52 @@ export default function BoothsPage() {
               </tbody>
             </table>
           </div>
+
+          {/* Mobile: card list */}
+          <div className="sm:hidden divide-y divide-border/50">
+            {loading ? (
+              Array.from({ length: 3 }).map((_, i) => (
+                <div key={i} className="flex items-center gap-4 p-4 animate-pulse">
+                  <div className="h-10 w-10 rounded-xl bg-muted shrink-0" />
+                  <div className="flex-1 space-y-2">
+                    <div className="h-3.5 w-32 rounded bg-muted" />
+                    <div className="h-3 w-20 rounded bg-muted" />
+                  </div>
+                </div>
+              ))
+            ) : booths.length === 0 ? (
+              <div className="py-16 text-center">
+                <Store className="mx-auto h-10 w-10 text-muted-foreground/30 mb-3" />
+                <p className="text-muted-foreground">No booths found.</p>
+              </div>
+            ) : (
+              booths.map((booth) => (
+                <div key={booth.id} className="p-4 flex items-center gap-3 cursor-pointer active:bg-muted/30 transition-colors"
+                  onClick={() => setViewedBooth(booth)}>
+                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-600">
+                    <Store className="h-5 w-5" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[15px] font-semibold text-foreground truncate">{booth.name}</p>
+                    <p className="text-[12px] text-muted-foreground">{booth.event?.name}</p>
+                  </div>
+                  <div className="flex items-center gap-1 shrink-0">
+                    <Link href={`/booths/${booth.id}/scan`} onClick={(e) => e.stopPropagation()} className="p-2 text-emerald-600 hover:bg-emerald-500/10 rounded-lg transition-colors">
+                      <QrCode className="h-4 w-4" />
+                    </Link>
+                    <button onClick={(e) => { e.stopPropagation(); openEditForm(booth); }} className="p-2 text-blue-500 hover:bg-blue-500/10 rounded-lg transition-colors">
+                      <Edit2 className="h-4 w-4" />
+                    </button>
+                    <button onClick={(e) => { e.stopPropagation(); handleDelete(booth.id); }} className="p-2 text-red-500 hover:bg-red-500/10 rounded-lg transition-colors">
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
         </div>
+
       </div>
       <DetailModal
         isOpen={!!viewedBooth}

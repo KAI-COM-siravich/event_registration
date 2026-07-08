@@ -251,25 +251,19 @@ export default function RewardsPage() {
           </div>
         )}
 
-        {/* Table */}
+        {/* Reward History */}
         <div className="apple-card overflow-hidden p-0 sm:p-0 border border-border/50">
           <div className="border-b border-border/50 bg-muted/20 px-4 py-3">
-            <h2 className="text-[15px] font-semibold tracking-tight text-foreground">
-              Reward History
-            </h2>
+            <h2 className="text-[15px] font-semibold tracking-tight text-foreground">Reward History</h2>
           </div>
-          <div className="overflow-x-auto">
+
+          {/* Desktop table */}
+          <div className="hidden sm:block overflow-x-auto">
             <table className="min-w-full divide-y divide-border/50 text-[14px]">
               <thead>
                 <tr className="bg-muted/10">
                   {["Customer", "Event", "Date Granted"].map((h) => (
-                    <th
-                      key={h}
-                      scope="col"
-                      className="px-6 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground"
-                    >
-                      {h}
-                    </th>
+                    <th key={h} scope="col" className="px-6 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">{h}</th>
                   ))}
                 </tr>
               </thead>
@@ -278,39 +272,19 @@ export default function RewardsPage() {
                   Array.from({ length: 4 }).map((_, i) => (
                     <tr key={i} className="animate-pulse">
                       {[1, 2, 3].map((j) => (
-                        <td key={j} className="px-6 py-4">
-                          <div className="h-3.5 w-24 rounded bg-muted" />
-                        </td>
+                        <td key={j} className="px-6 py-4"><div className="h-3.5 w-24 rounded bg-muted" /></td>
                       ))}
                     </tr>
                   ))
                 ) : rewards.length === 0 ? (
-                  <tr>
-                    <td
-                      className="px-6 py-10 text-center text-[15px] text-muted-foreground"
-                      colSpan={3}
-                    >
-                      No rewards granted yet.
-                    </td>
-                  </tr>
+                  <tr><td className="px-6 py-10 text-center text-[15px] text-muted-foreground" colSpan={3}>No rewards granted yet.</td></tr>
                 ) : (
                   rewards.map((r) => (
-                    <tr
-                      key={r.id}
-                      className="transition-colors hover:bg-muted/30"
-                    >
-                      <td className="px-6 py-4 font-medium text-foreground">
-                        {getCustomerLabel(r.customer)}
-                      </td>
+                    <tr key={r.id} className="transition-colors hover:bg-muted/30">
+                      <td className="px-6 py-4 font-medium text-foreground">{getCustomerLabel(r.customer)}</td>
+                      <td className="px-6 py-4 text-muted-foreground">{r.event?.name ?? "—"}</td>
                       <td className="px-6 py-4 text-muted-foreground">
-                        {r.event?.name ?? "—"}
-                      </td>
-                      <td className="px-6 py-4 text-muted-foreground">
-                        {new Date(r.createdAt).toLocaleDateString("en-US", {
-                          year: "numeric",
-                          month: "short",
-                          day: "numeric",
-                        })}
+                        {new Date(r.createdAt).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })}
                       </td>
                     </tr>
                   ))
@@ -318,7 +292,48 @@ export default function RewardsPage() {
               </tbody>
             </table>
           </div>
+
+          {/* Mobile: card list */}
+          <div className="sm:hidden divide-y divide-border/50">
+            {loading ? (
+              Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className="flex items-center gap-4 p-4 animate-pulse">
+                  <div className="h-10 w-10 rounded-full bg-muted shrink-0" />
+                  <div className="flex-1 space-y-2">
+                    <div className="h-3.5 w-32 rounded bg-muted" />
+                    <div className="h-3 w-20 rounded bg-muted" />
+                  </div>
+                  <div className="h-3 w-14 rounded bg-muted shrink-0" />
+                </div>
+              ))
+            ) : rewards.length === 0 ? (
+              <div className="py-16 text-center">
+                <Award className="mx-auto h-10 w-10 text-muted-foreground/30 mb-3" />
+                <p className="text-muted-foreground">No rewards granted yet.</p>
+              </div>
+            ) : (
+              rewards.map((r) => {
+                const name = getCustomerLabel(r.customer);
+                const initials = name.split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase();
+                return (
+                  <div key={r.id} className="flex items-center gap-4 px-4 py-3">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-orange-500/10 text-orange-600 text-[13px] font-bold">
+                      {initials}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[14px] font-semibold text-foreground truncate">{name}</p>
+                      <p className="text-[12px] text-muted-foreground truncate">{r.event?.name ?? "—"}</p>
+                    </div>
+                    <p className="text-[12px] text-muted-foreground shrink-0">
+                      {new Date(r.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                    </p>
+                  </div>
+                );
+              })
+            )}
+          </div>
         </div>
+
       </div>
     </AppShell>
   );

@@ -18,6 +18,7 @@ import {
   ShieldAlert,
 } from "lucide-react";
 import { signOut } from "next-auth/react";
+import { BottomNav } from "../ui/BottomNav";
 
 const NAV_ITEMS = [
   { href: "/admin", label: "Dashboard", Icon: LayoutDashboard, exact: true },
@@ -56,19 +57,19 @@ export function AppShell({ children, title }: AppShellProps) {
 
   return (
     <div className="flex h-screen overflow-hidden bg-background">
-      {/* Mobile backdrop */}
+      {/* Mobile & tablet backdrop */}
       {open && (
         <div
           role="presentation"
-          className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm lg:hidden transition-opacity"
+          className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm lg:hidden transition-opacity"
           onClick={() => setOpen(false)}
         />
       )}
 
-      {/* Sidebar */}
+      {/* Sidebar — hidden on mobile (bottom nav used instead), slide-in on tablet, static on desktop */}
       <aside
         className={[
-          "fixed inset-y-0 left-0 z-50 flex w-56 flex-col border-r border-sidebar-border bg-sidebar/80 backdrop-blur-2xl",
+          "fixed inset-y-0 left-0 z-50 flex w-60 flex-col border-r border-sidebar-border bg-sidebar/90 backdrop-blur-2xl",
           "transition-transform duration-300 ease-in-out",
           "lg:static lg:translate-x-0",
           open ? "translate-x-0" : "-translate-x-full",
@@ -77,7 +78,7 @@ export function AppShell({ children, title }: AppShellProps) {
         {/* Brand */}
         <div className="flex h-14 items-center justify-between px-4 border-b border-border/50">
           <div className="flex items-center gap-2 overflow-hidden whitespace-nowrap">
-            <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-[0.4rem] bg-primary text-[9px] font-bold text-primary-foreground tracking-wider shadow-sm">
+            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-[0.5rem] bg-primary text-[10px] font-bold text-primary-foreground tracking-wider shadow-sm">
               {orgName.substring(0, 2).toUpperCase()}
             </span>
             <span className="text-[14px] font-semibold text-sidebar-foreground tracking-tight truncate">
@@ -87,7 +88,7 @@ export function AppShell({ children, title }: AppShellProps) {
           <button
             type="button"
             aria-label="Close navigation"
-            className="rounded-full p-1 text-muted-foreground hover:bg-muted/50 lg:hidden transition-colors"
+            className="rounded-full p-1.5 text-muted-foreground hover:bg-muted/50 lg:hidden transition-colors"
             onClick={() => setOpen(false)}
           >
             <X className="h-4 w-4" />
@@ -95,7 +96,7 @@ export function AppShell({ children, title }: AppShellProps) {
         </div>
 
         {/* Navigation */}
-        <nav className="flex flex-1 flex-col gap-0.5 p-2 pt-3">
+        <nav className="flex flex-1 flex-col gap-0.5 p-2 pt-3 overflow-y-auto">
           <p className="mb-1.5 px-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70">
             Management
           </p>
@@ -107,7 +108,7 @@ export function AppShell({ children, title }: AppShellProps) {
                 href={href}
                 onClick={() => setOpen(false)}
                 className={[
-                  "flex items-center gap-2.5 rounded-[0.6rem] px-2.5 py-1.5 text-[14px] font-medium transition-all duration-200",
+                  "flex items-center gap-2.5 rounded-[0.6rem] px-2.5 py-2 text-[14px] font-medium transition-all duration-200",
                   active
                     ? "bg-sidebar-primary/10 text-sidebar-primary shadow-[inset_0_1px_0_rgba(255,255,255,0.1)] glow-border"
                     : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
@@ -121,14 +122,21 @@ export function AppShell({ children, title }: AppShellProps) {
         </nav>
 
         {/* Footer */}
-        <div className="p-2 border-t border-border/50">
+        <div className="p-2 border-t border-border/50 space-y-1">
           <Link
             href="/register"
-            className="flex items-center justify-center gap-2 rounded-[0.6rem] bg-sidebar-accent/50 px-3 py-2 text-[13px] font-medium text-sidebar-foreground transition-colors hover:bg-sidebar-accent glow-border"
+            className="flex items-center justify-center gap-2 rounded-[0.6rem] bg-sidebar-accent/50 px-3 py-2 text-[13px] font-medium text-sidebar-foreground transition-colors hover:bg-sidebar-accent"
           >
             <Users className="h-4 w-4 shrink-0" aria-hidden="true" />
             Register Customer
           </Link>
+          <button
+            onClick={() => signOut({ callbackUrl: "/" })}
+            className="w-full flex items-center justify-center gap-2 rounded-[0.6rem] px-3 py-2 text-[13px] font-medium text-muted-foreground hover:bg-red-500/10 hover:text-red-500 transition-colors"
+          >
+            <LogOut className="h-4 w-4" />
+            Sign Out
+          </button>
         </div>
       </aside>
 
@@ -136,13 +144,14 @@ export function AppShell({ children, title }: AppShellProps) {
       <div className="flex flex-1 flex-col overflow-hidden relative linear-grid">
         {/* Topbar */}
         <header className="absolute inset-x-0 top-0 z-30 flex h-14 shrink-0 items-center gap-3 bg-background/70 backdrop-blur-xl px-4 lg:px-6 border-b border-border/50">
+          {/* Hamburger — visible on tablet only (hidden on mobile since bottom nav exists, hidden on desktop since sidebar is always open) */}
           <button
             type="button"
             aria-label="Open navigation"
-            className="rounded-full p-1.5 text-muted-foreground hover:bg-muted lg:hidden transition-colors"
+            className="rounded-full p-1.5 text-muted-foreground hover:bg-muted hidden sm:flex lg:hidden transition-colors touch-target"
             onClick={() => setOpen(true)}
           >
-            <Menu className="h-4 w-4" />
+            <Menu className="h-5 w-5" />
           </button>
           <h1 className="text-lg font-semibold tracking-tight text-foreground">
             {title ?? "Dashboard"}
@@ -150,15 +159,22 @@ export function AppShell({ children, title }: AppShellProps) {
           <div className="flex-1" />
           <button
             onClick={() => signOut({ callbackUrl: "/" })}
-            className="flex items-center gap-2 rounded-full bg-muted/50 px-3 py-1.5 text-sm font-medium text-muted-foreground hover:bg-red-500/10 hover:text-red-500 transition-colors"
+            className="flex items-center gap-2 rounded-full bg-muted/50 px-3 py-1.5 text-sm font-medium text-muted-foreground hover:bg-red-500/10 hover:text-red-500 transition-colors touch-target"
           >
             <LogOut className="h-4 w-4" />
             <span className="hidden sm:inline">Sign Out</span>
           </button>
         </header>
 
-        {/* Page content */}
-        <main className="flex-1 overflow-auto p-3 pt-16 lg:p-6 lg:pt-18 relative z-10">{children}</main>
+        {/* Page content — padded for bottom nav on mobile */}
+        <main className="flex-1 overflow-auto relative z-10">
+          <div className="p-3 pt-16 pb-28 lg:p-6 lg:pt-18 lg:pb-6 min-h-full">
+            {children}
+          </div>
+        </main>
+
+        {/* Mobile bottom navigation */}
+        <BottomNav />
       </div>
     </div>
   );
