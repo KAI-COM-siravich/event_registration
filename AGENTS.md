@@ -1,5 +1,22 @@
-<!-- BEGIN:nextjs-agent-rules -->
-# This is NOT the Next.js you know
+# Project Rules
 
-This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` before writing any code. Heed deprecation notices.
-<!-- END:nextjs-agent-rules -->
+Project: Event Registration
+
+Stack:
+- Next.js 15
+- TypeScript
+- Prisma
+- PostgreSQL
+- TailwindCSS
+- shadcn/ui
+
+Rules:
+- Reuse existing component
+- Never create duplicate component
+- Check existing route before creating new route
+- Check existing API before creating API
+- Use Prisma Client from lib/prisma.ts
+- Mobile First Design
+- Apple Style UI
+- Orange Theme
+``

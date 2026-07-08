@@ -4,7 +4,20 @@ import prisma from "@/lib/prisma";
 import { generateId } from "@/lib/idGenerator";
 import { NextRequest } from "next/server";
 
-async function getAuthOptions(): Promise<AuthOptions> {
+async function logAuditAction(userId: string, action: string) {
+  try {
+    await prisma.auditLog.create({
+      data: {
+        userId,
+        action,
+      },
+    });
+  } catch (error) {
+    console.error("Failed to save audit log", error);
+  }
+}
+
+export async function getAuthOptions(): Promise<AuthOptions> {
   let settings: { key: string, value: string }[] = [];
   try {
     settings = await prisma.systemConfig.findMany({
@@ -66,8 +79,11 @@ async function getAuthOptions(): Promise<AuthOptions> {
 
         // Deny access if the user is not approved
         if (dbUser.status !== "APPROVED") {
+          await logAuditAction(dbUser.id, "Sign in denied (pending approval)");
           return "/?error=PendingApproval";
         }
+
+        await logAuditAction(dbUser.id, "Sign in");
 
         // @ts-ignore
         user.role = dbUser.role;
@@ -83,6 +99,21 @@ async function getAuthOptions(): Promise<AuthOptions> {
         if (token?.role && session.user) session.user.role = token.role;
         return session;
       }
+    },
+    events: {
+      async signOut(message) {
+        const email = message?.token?.email || message?.session?.user?.email;
+        if (!email) return;
+
+        try {
+          const dbUser = await prisma.user.findUnique({ where: { email } });
+          if (dbUser) {
+            await logAuditAction(dbUser.id, "Sign out");
+          }
+        } catch (error) {
+          console.error("Failed to save sign-out audit log", error);
+        }
+      },
     },
     pages: {
       signIn: "/",

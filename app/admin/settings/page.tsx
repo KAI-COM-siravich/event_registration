@@ -166,18 +166,12 @@ export default function SettingsPage() {
 
             <div className="mt-6 rounded-xl border border-border/50 bg-muted/5 p-4 overflow-hidden">
               <div className="mb-3 text-xs font-bold text-muted-foreground uppercase tracking-wider">Form Preview</div>
-              <div className="relative w-full h-[600px] overflow-hidden rounded-xl border border-border/50 bg-white dark:bg-zinc-950 shadow-sm">
+              <div className="relative h-150 w-full overflow-hidden rounded-xl border border-border/50 bg-white shadow-sm dark:bg-zinc-950">
                 {origin ? (
                   <iframe 
                     src={`${origin}/register`} 
-                    className="absolute top-0 left-0 border-0 pointer-events-none"
+                    className="absolute left-0 top-0 h-[166.67%] w-[166.67%] origin-top-left scale-[0.6] border-0 pointer-events-none"
                     title="Registration Form Preview"
-                    style={{ 
-                      width: "166.66%", 
-                      height: "166.66%", 
-                      transform: "scale(0.6)", 
-                      transformOrigin: "0 0" 
-                    }}
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center">
@@ -208,8 +202,9 @@ export default function SettingsPage() {
               <form onSubmit={handleSaveConfig} className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="mb-1.5 block text-sm font-medium">Auto-Approve Registrations</label>
+                    <label htmlFor="auto-approve" className="mb-1.5 block text-sm font-medium">Auto-Approve Registrations</label>
                     <select
+                      id="auto-approve"
                       className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm focus:ring-2 focus:ring-primary"
                       value={apiConfig.AUTO_APPROVE}
                       onChange={(e) => setApiConfig({ ...apiConfig, AUTO_APPROVE: e.target.value })}
@@ -219,8 +214,9 @@ export default function SettingsPage() {
                     </select>
                   </div>
                   <div>
-                    <label className="mb-1.5 block text-sm font-medium">Min Booths for Reward</label>
+                    <label htmlFor="min-booths-for-reward" className="mb-1.5 block text-sm font-medium">Min Booths for Reward</label>
                     <input
+                      id="min-booths-for-reward"
                       type="number"
                       min="1"
                       className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm focus:ring-2 focus:ring-primary"
@@ -231,8 +227,9 @@ export default function SettingsPage() {
                 </div>
 
                 <div>
-                  <label className="mb-1.5 block text-sm font-medium">Organization Name</label>
+                  <label htmlFor="organization-name" className="mb-1.5 block text-sm font-medium">Organization Name</label>
                   <input
+                    id="organization-name"
                     type="text"
                     className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm focus:ring-2 focus:ring-primary"
                     placeholder="E.g., Tech Corp"
@@ -242,8 +239,9 @@ export default function SettingsPage() {
                 </div>
 
                 <div>
-                  <label className="mb-1.5 block text-sm font-medium">n8n Webhook URL (For Line Messages)</label>
+                  <label htmlFor="n8n-webhook-url" className="mb-1.5 block text-sm font-medium">n8n Webhook URL (For Line Messages)</label>
                   <input
+                    id="n8n-webhook-url"
                     type="url"
                     className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm focus:ring-2 focus:ring-primary"
                     placeholder="https://n8n.yourdomain.com/webhook/..."
@@ -252,8 +250,9 @@ export default function SettingsPage() {
                   />
                 </div>
                 <div>
-                  <label className="mb-1.5 block text-sm font-medium">LINE OA Channel Access Token</label>
+                  <label htmlFor="line-oa-token" className="mb-1.5 block text-sm font-medium">LINE OA Channel Access Token</label>
                   <input
+                    id="line-oa-token"
                     type="text"
                     className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm focus:ring-2 focus:ring-primary"
                     placeholder="eyJhbGciOiJIUzI1..."
@@ -262,9 +261,10 @@ export default function SettingsPage() {
                   />
                 </div>
                 <div>
-                  <label className="mb-1.5 block text-sm font-medium">Approval Message Template</label>
+                  <label htmlFor="approval-message-template" className="mb-1.5 block text-sm font-medium">Approval Message Template</label>
                   <p className="mb-2 text-xs text-muted-foreground">Available variables: {'{{EVENT_NAME}}'}, {'{{QR_TOKEN}}'}</p>
                   <textarea
+                    id="approval-message-template"
                     rows={3}
                     className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm focus:ring-2 focus:ring-primary"
                     value={apiConfig.LINE_APPROVAL_TEMPLATE}
@@ -292,7 +292,7 @@ export default function SettingsPage() {
           </div>
           
           {/* Form 3: Authentication (Azure AD) */}
-          <div className="apple-card p-4 sm:p-6 shadow-sm border border-border/50">
+          <div className="apple-card p-4 shadow-sm border border-border/50 sm:p-6 md:col-span-2">
             <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-xl bg-orange-500/10">
               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 21 21">
                 <rect x="1" y="1" width="9" height="9" fill="#f25022" />
@@ -316,8 +316,9 @@ export default function SettingsPage() {
               <form onSubmit={(e) => handleSaveConfig(e, 'api')} className="space-y-4">
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div>
-                    <label className="mb-1 block text-sm font-medium text-foreground">Azure AD Tenant ID</label>
+                    <label htmlFor="azure-ad-tenant-id" className="mb-1 block text-sm font-medium text-foreground">Azure AD Tenant ID</label>
                     <input
+                      id="azure-ad-tenant-id"
                       type="text"
                       className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm focus:ring-2 focus:ring-primary"
                       value={apiConfig.AZURE_AD_TENANT_ID}
@@ -326,8 +327,9 @@ export default function SettingsPage() {
                     />
                   </div>
                   <div>
-                    <label className="mb-1 block text-sm font-medium text-foreground">Azure AD Client ID</label>
+                    <label htmlFor="azure-ad-client-id" className="mb-1 block text-sm font-medium text-foreground">Azure AD Client ID</label>
                     <input
+                      id="azure-ad-client-id"
                       type="text"
                       className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm focus:ring-2 focus:ring-primary"
                       value={apiConfig.AZURE_AD_CLIENT_ID}
@@ -336,8 +338,9 @@ export default function SettingsPage() {
                     />
                   </div>
                   <div className="sm:col-span-2">
-                    <label className="mb-1 block text-sm font-medium text-foreground">Azure AD Client Secret</label>
+                    <label htmlFor="azure-ad-client-secret" className="mb-1 block text-sm font-medium text-foreground">Azure AD Client Secret</label>
                     <input
+                      id="azure-ad-client-secret"
                       type="password"
                       className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm focus:ring-2 focus:ring-primary"
                       value={apiConfig.AZURE_AD_CLIENT_SECRET}
@@ -401,8 +404,9 @@ export default function SettingsPage() {
                   { key: "ID_PREFIX_BLACKLIST", label: "Blacklist" },
                 ].map(({ key, label }) => (
                   <div key={key}>
-                    <label className="mb-1 block text-xs text-muted-foreground">{label}</label>
+                    <label htmlFor={key} className="mb-1 block text-xs text-muted-foreground">{label}</label>
                     <input
+                      id={key}
                       type="text"
                       className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm focus:ring-2 focus:ring-primary"
                       value={apiConfig[key as keyof typeof apiConfig] || ""}

@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
 import prisma from "@/lib/prisma";
+import { getAuthOptions } from "../auth/[...nextauth]/route";
 
 export async function GET() {
   try {
@@ -34,6 +36,22 @@ export async function POST(request: Request) {
     });
 
     await Promise.all(updates);
+
+    const session = await getServerSession(await getAuthOptions());
+    if (session?.user?.email) {
+      const dbUser = await prisma.user.findUnique({
+        where: { email: session.user.email },
+      });
+
+      if (dbUser) {
+        await prisma.auditLog.create({
+          data: {
+            userId: dbUser.id,
+            action: "Updated system settings",
+          },
+        });
+      }
+    }
     
     return NextResponse.json({ success: true });
   } catch (error) {
