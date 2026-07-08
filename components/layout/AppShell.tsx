@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   LayoutDashboard,
   QrCode,
@@ -11,13 +11,23 @@ import {
   Menu,
   Users,
   X,
+  CalendarDays,
+  Settings,
+  LogOut,
+  UserCog,
+  ShieldAlert,
 } from "lucide-react";
+import { signOut } from "next-auth/react";
 
 const NAV_ITEMS = [
   { href: "/admin", label: "Dashboard", Icon: LayoutDashboard, exact: true },
+  { href: "/events", label: "Events", Icon: CalendarDays, exact: false },
   { href: "/check-in", label: "Check-In", Icon: QrCode, exact: false },
   { href: "/booths", label: "Booths", Icon: Store, exact: false },
   { href: "/rewards", label: "Rewards", Icon: Gift, exact: false },
+  { href: "/admin/users", label: "Users & Staff", Icon: UserCog, exact: false },
+  { href: "/admin/blacklist", label: "Blacklist", Icon: ShieldAlert, exact: false },
+  { href: "/admin/settings", label: "Settings", Icon: Settings, exact: false },
 ] as const;
 
 interface AppShellProps {
@@ -27,7 +37,19 @@ interface AppShellProps {
 
 export function AppShell({ children, title }: AppShellProps) {
   const [open, setOpen] = useState(false);
+  const [orgName, setOrgName] = useState("Event Platform");
   const pathname = usePathname();
+
+  useEffect(() => {
+    fetch("/api/settings")
+      .then(res => res.json())
+      .then(data => {
+        if (data && data.ORGANIZATION_NAME) {
+          setOrgName(data.ORGANIZATION_NAME);
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   const isActive = (href: string, exact: boolean) =>
     exact ? pathname === href : pathname.startsWith(href);
@@ -54,12 +76,12 @@ export function AppShell({ children, title }: AppShellProps) {
       >
         {/* Brand */}
         <div className="flex h-14 items-center justify-between px-4 border-b border-border/50">
-          <div className="flex items-center gap-2">
-            <span className="flex h-6 w-6 items-center justify-center rounded-[0.4rem] bg-primary text-[9px] font-bold text-primary-foreground tracking-wider shadow-sm">
-              NC
+          <div className="flex items-center gap-2 overflow-hidden whitespace-nowrap">
+            <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-[0.4rem] bg-primary text-[9px] font-bold text-primary-foreground tracking-wider shadow-sm">
+              {orgName.substring(0, 2).toUpperCase()}
             </span>
-            <span className="text-[15px] font-semibold text-sidebar-foreground tracking-tight">
-              Netcube
+            <span className="text-[14px] font-semibold text-sidebar-foreground tracking-tight truncate">
+              {orgName}
             </span>
           </div>
           <button
@@ -126,12 +148,13 @@ export function AppShell({ children, title }: AppShellProps) {
             {title ?? "Dashboard"}
           </h1>
           <div className="flex-1" />
-          <div
-            aria-label="Admin user"
-            className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-[13px] font-semibold text-primary ring-1 ring-primary/20 glow-border"
+          <button
+            onClick={() => signOut({ callbackUrl: "/" })}
+            className="flex items-center gap-2 rounded-full bg-muted/50 px-3 py-1.5 text-sm font-medium text-muted-foreground hover:bg-red-500/10 hover:text-red-500 transition-colors"
           >
-            A
-          </div>
+            <LogOut className="h-4 w-4" />
+            <span className="hidden sm:inline">Sign Out</span>
+          </button>
         </header>
 
         {/* Page content */}

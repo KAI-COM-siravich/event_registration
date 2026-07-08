@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { AppShell } from "../../components/layout/AppShell";
 import KPICards from "../../components/admin/KPICards";
 import Registrations from "../../components/admin/Registrations";
@@ -15,12 +15,41 @@ const TABS: { id: Tab; label: string }[] = [
 
 const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState<Tab>("registrations");
+  const [events, setEvents] = useState<{ id: string; name: string }[]>([]);
+  const [selectedEventId, setSelectedEventId] = useState<string>("");
+
+  useEffect(() => {
+    fetch("/api/events")
+      .then((r) => r.json())
+      .then((data) => setEvents(Array.isArray(data) ? data : []))
+      .catch(() => {});
+  }, []);
 
   return (
     <AppShell title="Dashboard">
       <div className="space-y-4 max-w-7xl mx-auto relative z-10">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <h2 className="text-xl font-semibold tracking-tight text-foreground hidden sm:block">
+            Overview
+          </h2>
+          <div className="w-full sm:w-auto flex-shrink-0">
+            <select
+              className="w-full sm:w-64 rounded-lg border border-border bg-background px-3 py-2 text-sm focus:ring-2 focus:ring-primary appearance-none"
+              value={selectedEventId}
+              onChange={(e) => setSelectedEventId(e.target.value)}
+            >
+              <option value="">All Events</option>
+              {events.map((event) => (
+                <option key={event.id} value={event.id}>
+                  {event.name}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+
         {/* KPI row */}
-        <KPICards />
+        <KPICards eventId={selectedEventId} />
 
         {/* Tabbed panel */}
         <div className="apple-card p-0 sm:p-0 overflow-hidden">
@@ -59,7 +88,11 @@ const AdminDashboard = () => {
             aria-labelledby={`tab-${activeTab}`}
             className="p-4 lg:p-6"
           >
-            {activeTab === "registrations" ? <Registrations /> : <Statistics />}
+            {activeTab === "registrations" ? (
+              <Registrations eventId={selectedEventId} />
+            ) : (
+              <Statistics eventId={selectedEventId} />
+            )}
           </div>
         </div>
       </div>

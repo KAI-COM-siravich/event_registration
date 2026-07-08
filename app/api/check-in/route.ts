@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import { generateId } from "@/lib/idGenerator";
 
 export async function POST(request: Request) {
   let body: unknown;
@@ -55,8 +56,9 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Already checked in" }, { status: 409 });
   }
 
+  const newCheckInId = await generateId("CheckIn", "ID_PREFIX_CHECKIN", "CHK-");
   await prisma.$transaction([
-    prisma.checkIn.create({ data: { registrationId: registration.id } }),
+    prisma.checkIn.create({ data: { id: newCheckInId, registrationId: registration.id } }),
     prisma.registration.update({
       where: { id: registration.id },
       data: { status: "CHECKEDIN" },

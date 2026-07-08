@@ -1,0 +1,1 @@
+﻿const { PrismaClient } = require('@prisma/client'); const prisma = new PrismaClient(); async function main() { try { await prisma.systemConfig.upsert({ where: { key: 'N8N_WEBHOOK_URL' }, update: { value: 'test' }, create: { key: 'N8N_WEBHOOK_URL', value: 'test' } }); console.log('success'); } catch(e) { console.error(e); } finally { await prisma.$disconnect(); } } main();

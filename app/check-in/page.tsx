@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { AppShell } from "../../components/layout/AppShell";
 import { QrCode, Check, X, Loader2 } from "lucide-react";
+import { Scanner } from "@yudiel/react-qr-scanner";
 
 type CheckInSuccess = {
   success: true;
@@ -34,6 +35,7 @@ export default function CheckInPage() {
   const [result, setResult] = useState<CheckInResult | null>(null);
   const [todayList, setTodayList] = useState<TodayCheckIn[]>([]);
   const [listLoading, setListLoading] = useState(true);
+  const [scannerActive, setScannerActive] = useState(false);
 
   const fetchToday = () => {
     fetch("/api/check-in")
@@ -47,16 +49,18 @@ export default function CheckInPage() {
 
   useEffect(fetchToday, []);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!token.trim()) return;
+  const handleScan = async (scannedToken: string) => {
+    if (!scannedToken.trim() || loading) return;
+    setToken(scannedToken);
+    setScannerActive(false);
+    
     setLoading(true);
     setResult(null);
     try {
       const res = await fetch("/api/check-in", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ token: token.trim() }),
+        body: JSON.stringify({ token: scannedToken.trim() }),
       });
       const data = (await res.json()) as CheckInResult;
       if (!res.ok) {
@@ -73,6 +77,11 @@ export default function CheckInPage() {
     }
   };
 
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    handleScan(token);
+  };
+
   const isSuccess = result && "success" in result && result.success === true;
 
   return (
@@ -80,22 +89,41 @@ export default function CheckInPage() {
       <div className="mx-auto max-w-2xl space-y-4">
         {/* Terminal card */}
         <div className="apple-card p-4 sm:p-5 shadow-sm border border-border/50">
-          <div className="mb-4 flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-[0.6rem] bg-[#0071E3]/10">
-              <QrCode
-                className="h-5 w-5 text-[#0071E3]"
-                aria-hidden="true"
+          <div className="mb-4 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-[0.6rem] bg-[#0071E3]/10">
+                <QrCode
+                  className="h-5 w-5 text-[#0071E3]"
+                  aria-hidden="true"
+                />
+              </div>
+              <div>
+                <h2 className="text-[15px] font-semibold text-foreground tracking-tight">
+                  Check-In Terminal
+                </h2>
+                <p className="text-[13px] text-muted-foreground">
+                  Enter QR token or scan a QR code
+                </p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => setScannerActive(!scannerActive)}
+              className="inline-flex h-9 items-center justify-center rounded-lg bg-primary/10 px-4 text-sm font-medium text-primary transition-colors hover:bg-primary/20"
+            >
+              {scannerActive ? "Close Camera" : "Open Camera"}
+            </button>
+          </div>
+
+          {scannerActive && (
+            <div className="mb-4 overflow-hidden rounded-xl border border-border bg-black">
+              <Scanner
+                onScan={(result) => handleScan(result[0].rawValue)}
+                styles={{ container: { width: "100%", aspectRatio: "1/1" } }}
               />
             </div>
-            <div>
-              <h2 className="text-[15px] font-semibold text-foreground tracking-tight">
-                Check-In Terminal
-              </h2>
-              <p className="text-[13px] text-muted-foreground">
-                Enter QR token or scan a QR code
-              </p>
-            </div>
-          </div>
+          )}
+
           <form onSubmit={handleSubmit} className="flex gap-2">
             <input
               id="checkin-token"

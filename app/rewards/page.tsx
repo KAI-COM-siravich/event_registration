@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { AppShell } from "../../components/layout/AppShell";
-import { Award, Loader2, Plus, X } from "lucide-react";
+import { Award, Loader2, Plus, X, QrCode } from "lucide-react";
 
 type Reward = {
   id: string;
@@ -129,15 +130,24 @@ export default function RewardsPage() {
               <p className="text-[14px] font-medium text-muted-foreground mt-0.5">Total rewards granted</p>
             </div>
           </div>
-          <button
-            type="button"
-            id="grant-reward-btn"
-            onClick={() => setShowForm(true)}
-            className="glow-border inline-flex items-center gap-2 rounded-full bg-foreground px-5 py-2.5 text-[14px] font-semibold text-background transition-all hover:scale-105"
-          >
-            <Plus className="h-4 w-4" aria-hidden="true" />
-            Grant Reward
-          </button>
+          <div className="flex items-center gap-2">
+            <Link
+              href="/rewards/scan"
+              className="glow-border inline-flex items-center gap-2 rounded-full bg-emerald-500/10 px-5 py-2.5 text-[14px] font-semibold text-emerald-600 transition-all hover:bg-emerald-500/20 hover:scale-105"
+            >
+              <QrCode className="h-4 w-4" aria-hidden="true" />
+              Scan Terminal
+            </Link>
+            <button
+              type="button"
+              id="grant-reward-btn"
+              onClick={() => setShowForm(true)}
+              className="glow-border inline-flex items-center gap-2 rounded-full bg-foreground px-5 py-2.5 text-[14px] font-semibold text-background transition-all hover:scale-105"
+            >
+              <Plus className="h-4 w-4" aria-hidden="true" />
+              Grant Reward
+            </button>
+          </div>
         </div>
 
         {error && (

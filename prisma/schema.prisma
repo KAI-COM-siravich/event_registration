@@ -12,16 +12,24 @@ model User {
   email     String   @unique
   phone     String?  @unique
   firstName String
-  lastName  String
-  company   String?
-  role      Role     @default(CUSTOMER)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  lastName    String
+  company     String?
+  jobPosition String?
+  role      Role       @default(CUSTOMER)
+  status    UserStatus @default(PENDING)
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
 
   sales       Sales[]
   auditLogs   AuditLog[]
   lineAccount LineAccount?
   customers   Customer[]   @relation("UserToCustomer")
+}
+
+enum UserStatus {
+  PENDING
+  APPROVED
+  REJECTED
 }
 
 enum Role {
@@ -68,9 +76,16 @@ model Registration {
   id         String             @id @default(cuid())
   customerId String
   eventId    String
-  status     RegistrationStatus @default(PENDING)
-  createdAt  DateTime           @default(now())
-  updatedAt  DateTime           @updatedAt
+  status         RegistrationStatus @default(PENDING)
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+
+  travelMethod   String?
+  needHotel      String?
+  salesRep       String?
+  plannedUpgrade String?
+  projectByYear  String?
+  consent        Boolean            @default(false)
 
   customer Customer @relation("CustomerToRegistration", fields: [customerId], references: [id])
   event    Event    @relation("EventToRegistration", fields: [eventId], references: [id])
@@ -163,4 +178,15 @@ model AuditLog {
   action    String
   timestamp DateTime @default(now())
   user      User     @relation(fields: [userId], references: [id])
+}
+
+model SystemConfig {
+  key       String   @id
+  value     String
+  updatedAt DateTime @updatedAt
+}
+
+model Sequence {
+  name  String @id
+  value Int    @default(0)
 }

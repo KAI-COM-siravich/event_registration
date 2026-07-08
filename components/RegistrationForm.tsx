@@ -16,12 +16,19 @@ type FormState = {
   email: string;
   phone: string;
   company: string;
+  jobPosition: string;
   eventId: string;
+  travelMethod: string;
+  needHotel: string;
+  salesRep: string;
+  plannedUpgrade: string;
+  projectByYear: string;
+  consent: boolean;
 };
 
 type FieldErrors = Partial<Record<keyof FormState, string>>;
 
-const STEPS = ["Personal Info", "Select Event", "Confirm"] as const;
+const STEPS = ["Personal Info", "Event Details", "Confirm"] as const;
 
 const INITIAL: FormState = {
   firstName: "",
@@ -29,7 +36,14 @@ const INITIAL: FormState = {
   email: "",
   phone: "",
   company: "",
+  jobPosition: "",
   eventId: "",
+  travelMethod: "",
+  needHotel: "",
+  salesRep: "",
+  plannedUpgrade: "",
+  projectByYear: "",
+  consent: false,
 };
 
 function StepIndicator({ current }: { current: number }) {
@@ -65,7 +79,7 @@ function StepIndicator({ current }: { current: number }) {
             {i < STEPS.length - 1 && (
               <div
                 className={[
-                  "mx-2 mb-4 h-[1px] w-8 transition-colors duration-300 sm:w-16",
+                  "mx-2 mb-4 h-px w-8 transition-colors duration-300 sm:w-16",
                   i < current ? "bg-foreground" : "bg-border",
                 ].join(" ")}
               />
@@ -128,12 +142,10 @@ const RegistrationForm = () => {
   };
 
   const validateStep2 = (): boolean => {
-    if (!form.eventId) {
-      setErrors({ eventId: "Please select an event" });
-      return false;
-    }
-    setErrors({});
-    return true;
+    const errs: FieldErrors = {};
+    if (!form.eventId) errs.eventId = "Please select an event";
+    setErrors(errs);
+    return Object.keys(errs).length === 0;
   };
 
   const handleNext = () => {
@@ -148,6 +160,10 @@ const RegistrationForm = () => {
   };
 
   const handleSubmit = async () => {
+    if (!form.consent) {
+      setSubmitError("You must provide consent to proceed.");
+      return;
+    }
     setSubmitting(true);
     setSubmitError("");
     try {
@@ -278,6 +294,19 @@ const RegistrationForm = () => {
                   onChange={(e) => set("company", e.target.value)}
                 />
               </div>
+              <div>
+                <label htmlFor="reg-jobPosition" className={labelClass}>
+                  Job Position
+                </label>
+                <input
+                  id="reg-jobPosition"
+                  type="text"
+                  className={inputClass}
+                  placeholder="IT Manager"
+                  value={form.jobPosition}
+                  onChange={(e) => set("jobPosition", e.target.value)}
+                />
+              </div>
             </div>
           </div>
         )}
@@ -341,6 +370,71 @@ const RegistrationForm = () => {
               </div>
             )}
             <FieldError msg={errors.eventId} />
+            
+            <div className="mt-8 space-y-4 pt-6 border-t border-border/50">
+              <h4 className="text-[16px] font-semibold tracking-tight text-foreground mb-4">Registration Details</h4>
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <div>
+                  <label htmlFor="reg-travelMethod" className={labelClass}>Travel Method</label>
+                  <input
+                    id="reg-travelMethod"
+                    type="text"
+                    className={inputClass}
+                    placeholder="e.g. เดินทางส่วนตัว"
+                    value={form.travelMethod}
+                    onChange={(e) => set("travelMethod", e.target.value)}
+                  />
+                </div>
+                <div>
+                  <label htmlFor="reg-needHotel" className={labelClass}>Need Hotel?</label>
+                  <select
+                    id="reg-needHotel"
+                    className={inputClass}
+                    value={form.needHotel}
+                    onChange={(e) => set("needHotel", e.target.value)}
+                  >
+                    <option value="">-- Select --</option>
+                    <option value="ต้องการที่พัก">ต้องการที่พัก (Yes)</option>
+                    <option value="ไม่ต้องการ">ไม่ต้องการ (No)</option>
+                  </select>
+                </div>
+              </div>
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <div>
+                  <label htmlFor="reg-salesRep" className={labelClass}>Sales Rep Email</label>
+                  <input
+                    id="reg-salesRep"
+                    type="email"
+                    className={inputClass}
+                    placeholder="sales@company.com"
+                    value={form.salesRep}
+                    onChange={(e) => set("salesRep", e.target.value)}
+                  />
+                </div>
+                <div>
+                  <label htmlFor="reg-projectByYear" className={labelClass}>Project By Year</label>
+                  <input
+                    id="reg-projectByYear"
+                    type="text"
+                    className={inputClass}
+                    placeholder="e.g. ERP, PCs Replacement"
+                    value={form.projectByYear}
+                    onChange={(e) => set("projectByYear", e.target.value)}
+                  />
+                </div>
+              </div>
+              <div>
+                <label htmlFor="reg-plannedUpgrade" className={labelClass}>Planned Upgrade</label>
+                <input
+                  id="reg-plannedUpgrade"
+                  type="text"
+                  className={inputClass}
+                  placeholder="e.g. Replace Server, New ERP"
+                  value={form.plannedUpgrade}
+                  onChange={(e) => set("plannedUpgrade", e.target.value)}
+                />
+              </div>
+            </div>
           </div>
         )}
 
@@ -353,23 +447,40 @@ const RegistrationForm = () => {
                 {[
                   { label: "Name", value: `${form.firstName} ${form.lastName}` },
                   { label: "Email", value: form.email },
-                  { label: "Phone", value: form.phone || "—" },
                   { label: "Company", value: form.company || "—" },
+                  { label: "Job Position", value: form.jobPosition || "—" },
                   { label: "Event", value: selectedEvent?.name ?? form.eventId },
+                  { label: "Travel Method", value: form.travelMethod || "—" },
+                  { label: "Need Hotel", value: form.needHotel || "—" },
+                  { label: "Planned Upgrade", value: form.plannedUpgrade || "—" },
                 ].map(({ label, value }) => (
-                  <div key={label} className="flex flex-col sm:flex-row sm:gap-4 border-b border-border/40 pb-4 last:border-0 last:pb-0">
-                    <dt className="w-32 shrink-0 text-[15px] font-medium text-muted-foreground">
+                  <div key={label} className="flex flex-col sm:flex-row sm:gap-4 border-b border-border/40 pb-3 last:border-0 last:pb-0">
+                    <dt className="w-32 shrink-0 text-[14px] font-medium text-muted-foreground">
                       {label}
                     </dt>
-                    <dd className="mt-1 sm:mt-0 text-[17px] font-medium text-foreground">{value}</dd>
+                    <dd className="mt-1 sm:mt-0 text-[15px] font-medium text-foreground">{value}</dd>
                   </div>
                 ))}
               </dl>
             </div>
+            
+            <div className="flex items-start gap-3 px-2 mt-4">
+              <input
+                id="reg-consent"
+                type="checkbox"
+                className="mt-1 h-4 w-4 shrink-0 rounded border-border/50 text-primary focus:ring-primary focus:ring-offset-background bg-background/50"
+                checked={form.consent}
+                onChange={(e) => set("consent", e.target.checked as any)}
+              />
+              <label htmlFor="reg-consent" className="text-[13px] text-muted-foreground leading-relaxed">
+                I hereby consent to the collection, use, and disclosure of my personal data for the purpose of event registration and communication.
+              </label>
+            </div>
+            
             {submitError && (
               <p
                 role="alert"
-                className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-800 dark:bg-red-950/30 dark:text-red-400"
+                className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-800 dark:bg-red-950/30 dark:text-red-400 mt-4"
               >
                 {submitError}
               </p>

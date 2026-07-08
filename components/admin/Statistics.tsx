@@ -27,14 +27,14 @@ function getCount(stat: RawStat, fallbackKey?: string): number {
 
 function toChartData(
   data: unknown,
-  labelKey: "eventId" | "boothId",
+  labelKey: string,
   fallbackLabel: string,
   fallbackKey?: string
 ): ChartDatum[] {
   if (!Array.isArray(data)) return [];
   return data.map((item, i) => {
     const stat = item as RawStat;
-    const raw = stat[labelKey];
+    const raw = stat[labelKey as keyof RawStat];
     return {
       label:
         typeof raw === "string" && raw ? raw : `${fallbackLabel} ${i + 1}`,
@@ -118,27 +118,28 @@ function ChartCard({
   );
 }
 
-const Statistics = () => {
+const Statistics = ({ eventId }: { eventId?: string }) => {
   const [checkInStats, setCheckInStats] = useState<ChartDatum[]>([]);
   const [boothStats, setBoothStats] = useState<ChartDatum[]>([]);
   const [rewardStats, setRewardStats] = useState<ChartDatum[]>([]);
-  const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    const qs = eventId ? `?eventId=${eventId}` : "";
     Promise.all([
-      fetch("/api/stats/check-ins").then((r) => r.json()),
-      fetch("/api/stats/booths").then((r) => r.json()),
-      fetch("/api/stats/rewards").then((r) => r.json()),
+      fetch(`/api/stats/check-ins${qs}`).then((r) => r.json()),
+      fetch(`/api/stats/booths${qs}`).then((r) => r.json()),
+      fetch(`/api/stats/rewards${qs}`).then((r) => r.json()),
     ])
       .then(([checkInData, boothData, rewardData]) => {
-        setCheckInStats(toChartData(checkInData, "eventId", "Event", "checkIn"));
-        setBoothStats(toChartData(boothData, "boothId", "Booth"));
-        setRewardStats(toChartData(rewardData, "eventId", "Event"));
+        setCheckInStats(toChartData(checkInData, "eventName", "Event", "checkIn"));
+        setBoothStats(toChartData(boothData, "boothName", "Booth"));
+        setRewardStats(toChartData(rewardData, "eventName", "Event"));
       })
       .catch(() => setError("Unable to load statistics"))
       .finally(() => setLoading(false));
-  }, []);
+  }, [eventId]);
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

@@ -9,17 +9,18 @@ type KPIStats = {
   totalBooths: number;
 };
 
-const KPICards = () => {
+const KPICards = ({ eventId }: { eventId?: string }) => {
   const [stats, setStats] = useState<KPIStats | null>(null);
 
   useEffect(() => {
-    fetch("/api/admin/stats")
+    const url = eventId ? `/api/kpi?eventId=${eventId}` : "/api/kpi";
+    fetch(url)
       .then((r) => r.json())
       .then((data: unknown) => {
         setStats(data as KPIStats);
       })
       .catch(() => {});
-  }, []);
+  }, [eventId]);
 
   const items = [
     {

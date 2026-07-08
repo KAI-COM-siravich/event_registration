@@ -13,14 +13,6 @@ const RegisterPage = () => {
   return (
     <div className="min-h-screen bg-background flex flex-col justify-center px-4 py-8 lg:px-6 linear-grid">
       <div className="mx-auto w-full max-w-2xl relative z-10">
-        {/* Back link */}
-        <Link
-          href="/"
-          className="mb-6 inline-flex items-center text-[14px] font-medium text-foreground hover:text-primary transition-colors"
-        >
-          <ChevronLeft className="mr-1 h-4 w-4" />
-          Back to Home
-        </Link>
 
         {/* Card */}
         <div className="apple-card">
