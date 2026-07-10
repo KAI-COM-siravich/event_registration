@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import type { Role } from "@prisma/client";
 import prisma from "@/lib/prisma";
 import { logAuditAction } from "@/lib/auditLog";
 import { getServerSession } from "next-auth/next";
@@ -16,7 +17,8 @@ export async function GET(req: Request) {
     const limit = parseInt(searchParams.get("limit") || "10", 10);
     const skip = (page - 1) * limit;
 
-    const where = { role: { in: ["STAFF", "ADMIN"] as const } };
+    const adminStaffRoles: Role[] = ["STAFF", "ADMIN"];
+    const where = { role: { in: adminStaffRoles } };
 
     const [users, total] = await Promise.all([
       prisma.user.findMany({

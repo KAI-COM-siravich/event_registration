@@ -133,7 +133,7 @@ export function DemoRoleSwitcher() {
   const links = QUICK_LINKS[selectedRole] || [];
 
   return (
-    <div className={`fixed bottom-4 right-4 z-[9999] overflow-hidden rounded-3xl border border-border/70 bg-background/95 shadow-2xl backdrop-blur-xl transition-all duration-200 ${collapsed ? "w-44" : "w-[min(100vw-1rem,22rem)]"}`}>
+    <div className={`fixed bottom-4 right-4 z-9999 overflow-hidden rounded-3xl border border-border/70 bg-background/95 shadow-2xl backdrop-blur-xl transition-all duration-200 ${collapsed ? "w-44" : "w-[min(100vw-1rem,22rem)]"}`}>
       <div className="flex items-center justify-between gap-3 p-4">
         <div className="flex items-center gap-3">
           <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-orange-500/10 text-orange-600">

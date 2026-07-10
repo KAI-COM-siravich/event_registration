@@ -163,7 +163,7 @@ const Registrations = ({ eventId }: { eventId?: string }) => {
       "Event", "Status", "Travel Method", "Need Hotel", "Sales Rep", "Planned Upgrade", 
       "Project By Year", "Consent", "Created At", "Blacklist Warning"
     ];
-    const rows = filtered.map(r => {
+    const rows = filtered.map((r: Registration) => {
       const mapped = mapRegistrationForModal(r);
       return [
         mapped["Registration ID"],
@@ -288,7 +288,7 @@ const Registrations = ({ eventId }: { eventId?: string }) => {
                   </tr>
                 ))
               : paginatedData.length > 0
-              ? paginatedData.map((reg) => (
+              ? paginatedData.map((reg: Registration) => (
                   <tr
                     key={reg.id}
                     className="transition-colors hover:bg-muted/30 group cursor-pointer"
