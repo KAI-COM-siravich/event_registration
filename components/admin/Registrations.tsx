@@ -196,16 +196,6 @@ const Registrations = ({ eventId }: { eventId?: string }) => {
     document.body.removeChild(link);
   };
 
-  const statusCounts = useMemo(() => {
-    const counts: Record<string, number> = { ALL: registrations.length };
-    ALL_STATUSES.slice(1).forEach(status => (counts[status] = 0));
-    registrations.forEach(r => {
-      const s = r.status.toUpperCase();
-      if (counts[s] !== undefined) counts[s]++;
-    });
-    return counts;
-  }, [registrations]);
-
   return (
     <div className="space-y-6">
       {/* Status Badges Filter */}
@@ -292,7 +282,7 @@ const Registrations = ({ eventId }: { eventId?: string }) => {
                   <tr key={i} className="animate-pulse">
                     {Array.from({ length: 5 }).map((__, j) => (
                       <td key={j} className="px-6 py-4">
-                        <div className="h-4 w-full max-w-[120px] rounded bg-muted" />
+                        <div className="h-4 w-full max-w-30 rounded bg-muted" />
                       </td>
                     ))}
                   </tr>
@@ -378,7 +368,7 @@ const Registrations = ({ eventId }: { eventId?: string }) => {
               >
                 <ChevronLeft className="h-4 w-4" />
               </button>
-              <span className="text-xs font-medium text-foreground min-w-[70px] text-center">
+              <span className="text-xs font-medium text-foreground min-w-17.5 text-center">
                 Page {currentPage} of {totalPages}
               </span>
               <button
