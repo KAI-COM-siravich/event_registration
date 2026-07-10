@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { AppShell } from "../../../components/layout/AppShell";
 import { Gift, Check, X, Loader2, ArrowLeft } from "lucide-react";
 import { Scanner } from "@yudiel/react-qr-scanner";
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "../../../components/ui/select";
 
 type ScanSuccess = {
   success: true;
@@ -104,12 +105,20 @@ export default function RewardScanPage() {
             {eventsLoading ? (
               <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
             ) : (
-              <select value={selectedEventId} onChange={(e) => setSelectedEventId(e.target.value)}
-                className="w-full rounded-xl border border-border/50 bg-background px-3 py-3 text-[15px] focus:outline-none focus:ring-2 focus:ring-primary touch-target">
-                {events.map((evt) => (
-                  <option key={evt.id} value={evt.id}>{evt.name}</option>
-                ))}
-              </select>
+              <Select 
+                value={selectedEventId} 
+                onValueChange={(val: string | null) => setSelectedEventId(val as string)}
+                items={events.map(evt => ({ value: evt.id, label: evt.name }))}
+              >
+                <SelectTrigger className="w-full h-[50px] text-[15px]">
+                  <SelectValue placeholder="Select Event" />
+                </SelectTrigger>
+                <SelectContent>
+                  {events.map((evt) => (
+                    <SelectItem key={evt.id} value={evt.id}>{evt.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             )}
           </div>
 

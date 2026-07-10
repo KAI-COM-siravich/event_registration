@@ -85,12 +85,15 @@ export async function POST(
     });
 
     const user = registration.customer.user;
+    const fName = registration.firstName || user?.firstName;
+    const lName = registration.lastName || user?.lastName;
+    const email = registration.email || user?.email;
     return NextResponse.json({
       success: true,
       visit,
       customer: {
-        name: [user?.firstName, user?.lastName].filter(Boolean).join(" ") || "Unknown",
-        email: user?.email ?? "",
+        name: [fName, lName].filter(Boolean).join(" ") || "Unknown",
+        email: email ?? "",
       },
     });
   } catch (error) {

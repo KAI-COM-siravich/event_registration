@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Check, ChevronRight, Loader2 } from "lucide-react";
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "./ui/select";
 
 type Event = {
   id: string;
@@ -349,11 +350,10 @@ const RegistrationForm = () => {
                             {event.name}
                           </p>
                           <p className="mt-1 text-[15px] text-muted-foreground">
-                            {new Date(event.date).toLocaleDateString("en-US", {
-                              weekday: "long",
-                              year: "numeric",
+                            {new Date(event.date).toLocaleDateString("en-GB", {
+                              day: "2-digit",
                               month: "long",
-                              day: "numeric",
+                              year: "numeric",
                             })}{" "}
                             · {event.location}
                           </p>
@@ -387,16 +387,19 @@ const RegistrationForm = () => {
                 </div>
                 <div>
                   <label htmlFor="reg-needHotel" className={labelClass}>Need Hotel?</label>
-                  <select
-                    id="reg-needHotel"
-                    className={inputClass}
+                  <Select
                     value={form.needHotel}
-                    onChange={(e) => set("needHotel", e.target.value)}
+                    onValueChange={(val: string | null) => set("needHotel", val as string)}
                   >
-                    <option value="">-- Select --</option>
-                    <option value="ต้องการที่พัก">ต้องการที่พัก (Yes)</option>
-                    <option value="ไม่ต้องการ">ไม่ต้องการ (No)</option>
-                  </select>
+                    <SelectTrigger id="reg-needHotel" className={inputClass}>
+                      <SelectValue placeholder="-- Select --" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">-- Select --</SelectItem>
+                      <SelectItem value="ต้องการที่พัก">ต้องการที่พัก (Yes)</SelectItem>
+                      <SelectItem value="ไม่ต้องการ">ไม่ต้องการ (No)</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">

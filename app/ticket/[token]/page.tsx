@@ -30,7 +30,12 @@ export default async function TicketPage({
   const { event, customer } = registration;
   const { user } = customer;
 
-  const fullName = [user.firstName, user.lastName].filter(Boolean).join(" ");
+  const fName = registration.firstName || user.firstName;
+  const lName = registration.lastName || user.lastName;
+  const email = registration.email || user.email;
+  const company = registration.company || user.company;
+
+  const fullName = [fName, lName].filter(Boolean).join(" ");
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-background linear-grid px-4 py-8 sm:py-12">
@@ -56,11 +61,10 @@ export default async function TicketPage({
               {event.name}
             </h1>
             <p className="text-[14px] text-white/70 font-medium">
-              {event.date ? new Date(event.date).toLocaleDateString("en-US", {
-                weekday: "short",
+              {event.date ? new Date(event.date).toLocaleDateString("en-GB", {
+                day: "2-digit",
+                month: "short",
                 year: "numeric",
-                month: "long",
-                day: "numeric",
               }) : "Date TBA"}
             </p>
           </div>
@@ -107,16 +111,16 @@ export default async function TicketPage({
               </div>
               <div>
                 <p className="text-[15px] font-semibold text-foreground">{fullName}</p>
-                <p className="text-[13px] text-muted-foreground">{user.email}</p>
+                <p className="text-[13px] text-muted-foreground">{email}</p>
               </div>
             </div>
 
-            {user.company && (
+            {company && (
               <div className="flex items-center gap-3">
                 <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-muted">
                   <Building2 className="h-4 w-4 text-muted-foreground" />
                 </div>
-                <p className="text-[14px] text-foreground font-medium">{user.company}</p>
+                <p className="text-[14px] text-foreground font-medium">{company}</p>
               </div>
             )}
 

@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useState } from "react";
 import { AppShell } from "../../components/layout/AppShell";
@@ -22,6 +22,8 @@ type TodayCheckIn = {
   id: string;
   createdAt: string;
   registration?: {
+    firstName?: string;
+    lastName?: string;
     customer?: { user?: { firstName?: string; lastName?: string; email?: string } };
     event?: { name?: string };
   };
@@ -83,15 +85,15 @@ export default function CheckInPage() {
 
   return (
     <AppShell title="Check-In">
-      <div className="mx-auto max-w-2xl space-y-4">
-        <div className="apple-card p-4 sm:p-6 shadow-sm border border-border/50 space-y-4">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-[0.6rem] bg-primary/10">
-              <QrCode className="h-5 w-5 text-primary" aria-hidden="true" />
+      <div className="mx-auto max-w-2xl space-y-3 sm:space-y-4">
+        <div className="apple-card p-3 sm:p-6 shadow-sm border border-border/50 space-y-3 sm:space-y-4">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <div className="flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-[0.6rem] bg-primary/10">
+              <QrCode className="h-4 w-4 sm:h-5 sm:w-5 text-primary" aria-hidden="true" />
             </div>
             <div>
-              <h2 className="text-[16px] font-semibold text-foreground tracking-tight">Check-In Terminal</h2>
-              <p className="text-[13px] text-muted-foreground">Scan QR code or enter token manually</p>
+              <h2 className="text-[15px] sm:text-[16px] font-semibold text-foreground tracking-tight">Check-In Terminal</h2>
+              <p className="text-[12px] sm:text-[13px] text-muted-foreground mt-0.5">Scan QR code or enter token manually</p>
             </div>
           </div>
 
@@ -181,15 +183,18 @@ export default function CheckInPage() {
               </div>
             ) : (
               todayList.map((ci) => {
-                const user = ci.registration?.customer?.user;
-                const name = [user?.firstName, user?.lastName].filter(Boolean).join(" ") || "—";
+                const reg = ci.registration;
+                const user = reg?.customer?.user;
+                const fName = reg?.firstName || user?.firstName;
+                const lName = reg?.lastName || user?.lastName;
+                const name = [fName, lName].filter(Boolean).join(" ") || "—";
                 const initials = name.split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase();
                 return (
-                  <div key={ci.id} className="flex items-center gap-4 px-4 py-3">
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-600 text-[13px] font-bold">{initials}</div>
+                  <div key={ci.id} className="flex items-center gap-3 px-3 py-2.5">
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-600 text-[12px] font-bold">{initials}</div>
                     <div className="flex-1 min-w-0">
                       <p className="text-[14px] font-semibold text-foreground truncate">{name}</p>
-                      <p className="text-[12px] text-muted-foreground truncate">{ci.registration?.event?.name ?? "—"}</p>
+                      <p className="text-[11px] text-muted-foreground truncate">{ci.registration?.event?.name ?? "—"}</p>
                     </div>
                     <p className="text-[12px] text-muted-foreground font-mono shrink-0">
                       {new Date(ci.createdAt).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}

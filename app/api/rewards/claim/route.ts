@@ -2,9 +2,18 @@ import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { generateId } from "@/lib/idGenerator";
 
+import { getServerSession } from "next-auth/next";
+import { getAuthOptions } from "../../auth/[...nextauth]/route";
+
 export async function POST(request: Request) {
   let body: unknown;
   try {
+    const session = await getServerSession(await getAuthOptions());
+    const role = (session?.user as any)?.role;
+    if (role === 'CUSTOMER' || !role) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+
     body = await request.json();
   } catch {
     return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
@@ -54,20 +63,22 @@ export async function POST(request: Request) {
     );
   }
 
-  // Fetch Reward Configs
-  const minBoothsConfig = await prisma.systemConfig.findUnique({
-    where: { key: "MIN_BOOTH_VISITS_FOR_REWARD" },
+  // Fetch total booths for this event
+  const totalBooths = await prisma.booth.count({
+    where: { eventId }
   });
-  const minBoothsRequired = parseInt(minBoothsConfig?.value || "0", 10);
 
-  if (minBoothsRequired > 0) {
+  if (totalBooths > 0) {
     const boothVisitsCount = await prisma.boothVisit.count({
-      where: { customerId: registration.customerId },
+      where: { 
+        customerId: registration.customerId,
+        booth: { eventId }
+      },
     });
     
-    if (boothVisitsCount < minBoothsRequired) {
+    if (boothVisitsCount < totalBooths) {
       return NextResponse.json(
-        { error: `Attendee must visit at least ${minBoothsRequired} booths. Current: ${boothVisitsCount}` },
+        { error: `Attendee must visit all ${totalBooths} booths. Current: ${boothVisitsCount}` },
         { status: 400 }
       );
     }
@@ -97,12 +108,15 @@ export async function POST(request: Request) {
     });
 
     const user = registration.customer.user;
+    const fName = registration.firstName || user?.firstName;
+    const lName = registration.lastName || user?.lastName;
+    const email = registration.email || user?.email;
     return NextResponse.json({
       success: true,
       reward,
       customer: {
-        name: [user?.firstName, user?.lastName].filter(Boolean).join(" ") || "Unknown",
-        email: user?.email ?? "",
+        name: [fName, lName].filter(Boolean).join(" ") || "Unknown",
+        email: email ?? "",
       },
     });
   } catch (error) {

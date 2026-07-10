@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo } from "react";
+import useSWR from "swr";
 
 type RawStat = Record<string, unknown> & {
   eventId?: string;
@@ -118,28 +119,21 @@ function ChartCard({
   );
 }
 
-const Statistics = ({ eventId }: { eventId?: string }) => {
-  const [checkInStats, setCheckInStats] = useState<ChartDatum[]>([]);
-  const [boothStats, setBoothStats] = useState<ChartDatum[]>([]);
-  const [rewardStats, setRewardStats] = useState<ChartDatum[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
-  useEffect(() => {
-    const qs = eventId ? `?eventId=${eventId}` : "";
-    Promise.all([
-      fetch(`/api/stats/check-ins${qs}`).then((r) => r.json()),
-      fetch(`/api/stats/booths${qs}`).then((r) => r.json()),
-      fetch(`/api/stats/rewards${qs}`).then((r) => r.json()),
-    ])
-      .then(([checkInData, boothData, rewardData]) => {
-        setCheckInStats(toChartData(checkInData, "eventName", "Event", "checkIn"));
-        setBoothStats(toChartData(boothData, "boothName", "Booth"));
-        setRewardStats(toChartData(rewardData, "eventName", "Event"));
-      })
-      .catch(() => setError("Unable to load statistics"))
-      .finally(() => setLoading(false));
-  }, [eventId]);
+const Statistics = ({ eventId }: { eventId?: string }) => {
+  const qs = eventId ? `?eventId=${eventId}` : "";
+
+  const { data: checkInData, error: checkInError } = useSWR(`/api/stats/check-ins${qs}`, fetcher, { refreshInterval: 5000 });
+  const { data: boothData, error: boothError } = useSWR(`/api/stats/booths${qs}`, fetcher, { refreshInterval: 5000 });
+  const { data: rewardData, error: rewardError } = useSWR(`/api/stats/rewards${qs}`, fetcher, { refreshInterval: 5000 });
+
+  const loading = !checkInData && !checkInError;
+  const error = checkInError || boothError || rewardError ? "Unable to load statistics" : null;
+
+  const checkInStats = useMemo(() => toChartData(checkInData, "eventName", "Event", "checkIn"), [checkInData]);
+  const boothStats = useMemo(() => toChartData(boothData, "boothName", "Booth"), [boothData]);
+  const rewardStats = useMemo(() => toChartData(rewardData, "eventName", "Event"), [rewardData]);
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

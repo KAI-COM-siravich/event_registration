@@ -2,7 +2,16 @@ import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { generateId } from "@/lib/idGenerator";
 
+import { getServerSession } from "next-auth/next";
+import { getAuthOptions } from "../auth/[...nextauth]/route";
+
 export async function POST(request: Request) {
+  const session = await getServerSession(await getAuthOptions());
+  const role = (session?.user as any)?.role;
+  if (role === 'CUSTOMER' || !role) {
+    return NextResponse.json({ error: "Forbidden: Only staff can perform check-ins." }, { status: 403 });
+  }
+
   let body: unknown;
   try {
     body = await request.json();
@@ -66,11 +75,14 @@ export async function POST(request: Request) {
   ]);
 
   const user = registration.customer?.user;
+  const fName = registration.firstName || user?.firstName;
+  const lName = registration.lastName || user?.lastName;
+  const email = registration.email || user?.email;
   return NextResponse.json({
     success: true,
     customer: {
-      name: [user?.firstName, user?.lastName].filter(Boolean).join(" ") || "Unknown",
-      email: user?.email ?? "",
+      name: [fName, lName].filter(Boolean).join(" ") || "Unknown",
+      email: email ?? "",
     },
     event: registration.event?.name ?? "",
   });

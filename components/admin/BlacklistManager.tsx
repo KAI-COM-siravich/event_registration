@@ -87,11 +87,11 @@ export default function BlacklistManager() {
     "Target Phone": item.phone || "N/A",
     "Target Company": item.company || "N/A",
     "Reason": item.reason,
-    "Added On": new Date(item.createdAt).toLocaleString(),
+    "Added On": new Date(item.createdAt).toLocaleString("en-GB", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }),
   });
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {error && (
         <p className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
           {error}
@@ -99,8 +99,8 @@ export default function BlacklistManager() {
       )}
 
       {/* Add Form */}
-      <div className="apple-card p-6">
-        <h3 className="text-lg font-semibold tracking-tight text-foreground mb-4">Add to Blacklist</h3>
+      <div className="apple-card p-4 sm:p-6">
+        <h3 className="text-[16px] sm:text-lg font-semibold tracking-tight text-foreground mb-3 sm:mb-4">Add to Blacklist</h3>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
             <div>
@@ -188,7 +188,7 @@ export default function BlacklistManager() {
                   </td>
                   <td className="px-6 py-4 text-sm text-muted-foreground">{item.reason}</td>
                   <td className="px-6 py-4 text-sm text-muted-foreground">
-                    {new Date(item.createdAt).toLocaleDateString()}
+                    {new Date(item.createdAt).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })}
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-2">

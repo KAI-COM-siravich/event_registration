@@ -89,9 +89,12 @@ export async function getAuthOptions(): Promise<AuthOptions> {
         user.role = dbUser.role;
         return true;
       },
-      async jwt({ token, user }) {
+      async jwt({ token, user, trigger, session }) {
         // @ts-ignore
         if (user?.role) token.role = user.role;
+        if (trigger === "update" && session?.role) {
+          token.role = session.role;
+        }
         return token;
       },
       async session({ session, token }) {

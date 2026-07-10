@@ -1,13 +1,11 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { AppShell } from "../../components/layout/AppShell";
-import KPICards from "../../components/admin/KPICards";
-import Statistics from "../../components/admin/Statistics";
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "../../components/ui/select";
+import { AppShell } from "../../../components/layout/AppShell";
+import Registrations from "../../../components/admin/Registrations";
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "../../../components/ui/select";
 
-
-const AdminDashboard = () => {
+const RegistrationsPage = () => {
   const [events, setEvents] = useState<{ id: string; name: string }[]>([]);
   const [selectedEventId, setSelectedEventId] = useState<string>("");
 
@@ -19,11 +17,11 @@ const AdminDashboard = () => {
   }, []);
 
   return (
-    <AppShell title="Dashboard">
+    <AppShell title="Registrations">
       <div className="space-y-4 max-w-7xl mx-auto relative z-10">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-          <h2 className="text-xl font-semibold tracking-tight text-foreground hidden sm:block">
-            ภาพรวม
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4 mb-4 sm:mb-6">
+          <h2 className="text-[17px] sm:text-xl font-semibold tracking-tight text-foreground hidden sm:block leading-tight">
+            รายชื่อผู้ลงทะเบียน
           </h2>
           <div className="w-full sm:w-auto shrink-0">
             <label htmlFor="event-filter" className="sr-only">
@@ -52,25 +50,12 @@ const AdminDashboard = () => {
           </div>
         </div>
 
-        {/* KPI row */}
-        <KPICards eventId={selectedEventId} />
-
-
-        {/* Statistics panel */}
-        <div className="apple-card p-0 sm:p-0 overflow-hidden mt-6">
-          <div className="border-b border-border/50 bg-muted/20 px-4 py-3">
-            <h3 className="text-[14px] font-semibold text-foreground">
-              สถิติ
-            </h3>
-          </div>
-          <div className="p-4 lg:p-6">
-            <Statistics eventId={selectedEventId} />
-          </div>
+        <div className="apple-card p-4 lg:p-6 overflow-hidden">
+          <Registrations eventId={selectedEventId} />
         </div>
       </div>
     </AppShell>
   );
 };
 
-export default AdminDashboard;
-
+export default RegistrationsPage;

@@ -1,14 +1,58 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { generateId } from "@/lib/idGenerator";
+import { sendEmailGraphAPI } from "@/lib/email";
+import { RegistrationSchema } from "@/lib/validations";
 
-export async function GET() {
-  const registrations = await prisma.registration.findMany({
-    orderBy: { createdAt: "desc" },
-    include: {
-      customer: { include: { user: true } },
-      event: true,
-    },
+export async function GET(request: Request) {
+  const { searchParams } = new URL(request.url);
+  const page = parseInt(searchParams.get("page") || "1", 10);
+  const limit = parseInt(searchParams.get("limit") || "10", 10);
+  const skip = (page - 1) * limit;
+
+  const search = searchParams.get("search") || "";
+  const status = searchParams.get("status") || "ALL";
+  const eventId = searchParams.get("eventId") || "";
+
+  const whereClause: any = {};
+  if (status !== "ALL") {
+    whereClause.status = status;
+  }
+  if (eventId) {
+    whereClause.eventId = eventId;
+  }
+  if (search) {
+    whereClause.OR = [
+      { customer: { user: { email: { contains: search, mode: "insensitive" } } } },
+      { customer: { user: { firstName: { contains: search, mode: "insensitive" } } } },
+      { customer: { user: { lastName: { contains: search, mode: "insensitive" } } } },
+      { event: { name: { contains: search, mode: "insensitive" } } },
+    ];
+  }
+
+  const [registrations, total, allStatuses] = await Promise.all([
+    prisma.registration.findMany({
+      where: whereClause,
+      skip,
+      take: limit,
+      orderBy: { createdAt: "desc" },
+      include: {
+        customer: { include: { user: true } },
+        event: true,
+      },
+    }),
+    prisma.registration.count({ where: whereClause }),
+    prisma.registration.groupBy({
+      by: ["status"],
+      _count: { status: true },
+      where: eventId ? { eventId } : undefined,
+    }),
+  ]);
+
+  const statusCounts: Record<string, number> = { ALL: 0 };
+  allStatuses.forEach(s => {
+    statusCounts[s.status] = s._count.status;
+    statusCounts.ALL += s._count.status;
   });
 
   const blacklists = await prisma.blacklist.findMany({ where: { active: true } });
@@ -27,7 +71,14 @@ export async function GET() {
     };
   });
 
-  return NextResponse.json(enriched);
+  return NextResponse.json({
+    items: enriched,
+    total,
+    page,
+    limit,
+    totalPages: Math.ceil(total / limit),
+    statusCounts,
+  });
 }
 
 export async function POST(request: Request) {
@@ -38,40 +89,16 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
   }
 
-  if (!body || typeof body !== "object") {
-    return NextResponse.json({ error: "Invalid request" }, { status: 400 });
-  }
-
-  const data = body as Record<string, unknown>;
-
-  const firstName =
-    typeof data.firstName === "string" ? data.firstName.trim() : "";
-  const lastName =
-    typeof data.lastName === "string" ? data.lastName.trim() : "";
-  const email = typeof data.email === "string" ? data.email.trim() : "";
-  const eventId = typeof data.eventId === "string" ? data.eventId.trim() : "";
-  const phone =
-    typeof data.phone === "string" && data.phone.trim()
-      ? data.phone.trim()
-      : null;
-  const company =
-    typeof data.company === "string" && data.company.trim()
-      ? data.company.trim()
-      : null;
-  const jobPosition = typeof data.jobPosition === "string" ? data.jobPosition.trim() : null;
-  const travelMethod = typeof data.travelMethod === "string" ? data.travelMethod.trim() : null;
-  const needHotel = typeof data.needHotel === "string" ? data.needHotel.trim() : null;
-  const salesRep = typeof data.salesRep === "string" ? data.salesRep.trim() : null;
-  const plannedUpgrade = typeof data.plannedUpgrade === "string" ? data.plannedUpgrade.trim() : null;
-  const projectByYear = typeof data.projectByYear === "string" ? data.projectByYear.trim() : null;
-  const consent = data.consent === true || data.consent === "true";
-
-  if (!firstName || !lastName || !email || !eventId) {
+  const validationResult = RegistrationSchema.safeParse(body);
+  if (!validationResult.success) {
     return NextResponse.json(
-      { error: "firstName, lastName, email, and eventId are required" },
+      { error: "Validation failed", details: validationResult.error.format() },
       { status: 400 }
     );
   }
+
+  const data = validationResult.data;
+  const { firstName, lastName, email, eventId, phone, company, jobPosition, travelMethod, needHotel, salesRep, plannedUpgrade, projectByYear, consent } = data;
 
   // Blacklist matching is handled on the Admin Dashboard side.
   // We allow the registration to proceed so it can be reviewed.
@@ -94,17 +121,6 @@ export async function POST(request: Request) {
     customer = await prisma.customer.create({ data: { id: newCustomerId, userId: user.id } });
   }
 
-  // Check for duplicate registration
-  const existing = await prisma.registration.findFirst({
-    where: { customerId: customer.id, eventId },
-  });
-  if (existing) {
-    return NextResponse.json(
-      { error: "Already registered for this event" },
-      { status: 409 }
-    );
-  }
-
   // Fetch Auto-Approve config
   const autoApproveConfig = await prisma.systemConfig.findUnique({
     where: { key: "AUTO_APPROVE" },
@@ -119,6 +135,12 @@ export async function POST(request: Request) {
       customerId: customer.id,
       eventId,
       status: approvalStatus,
+      firstName,
+      lastName,
+      email,
+      phone,
+      company,
+      jobPosition,
       travelMethod,
       needHotel,
       salesRep,
@@ -149,6 +171,20 @@ export async function POST(request: Request) {
           body: JSON.stringify({ registration, qrToken: qrCode.token, action: "REGISTRATION_APPROVED" }),
         }).catch(() => {});
       }
+
+      // Send Email Notification
+      const emailSubject = `Registration Approved: ${registration.event.name}`;
+      const emailHtml = `
+        <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eaeaea; border-radius: 10px;">
+          <h2 style="color: #f97316;">Congratulations, ${registration.firstName}!</h2>
+          <p>Your registration for <strong>${registration.event.name}</strong> has been approved.</p>
+          <p>Your unique QR Code token is: <strong style="background: #f1f5f9; padding: 5px 10px; border-radius: 5px;">${qrCode.token}</strong></p>
+          <p>Please present this QR code at the entrance and booth terminals during the event.</p>
+          <br/>
+          <p style="font-size: 12px; color: #64748b;">This is an automated message, please do not reply.</p>
+        </div>
+      `;
+      sendEmailGraphAPI(registration.email, emailSubject, emailHtml).catch(() => {});
 
       const lineAccount = await prisma.lineAccount.findUnique({
         where: { userId: registration.customer.user.id }

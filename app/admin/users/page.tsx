@@ -2,8 +2,9 @@
 
 import { useState, useEffect } from "react";
 import { AppShell } from "../../../components/layout/AppShell";
-import { Check, X, ShieldAlert, UserCog, Loader2, Eye } from "lucide-react";
+import { Check, X, ShieldAlert, UserCog, Loader2, Eye, ChevronLeft, ChevronRight } from "lucide-react";
 import { DetailModal } from "../../../components/ui/DetailModal";
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "../../../components/ui/select";
 
 type User = {
   id: string;
@@ -19,15 +20,26 @@ export default function UsersPage() {
   const [loading, setLoading] = useState(true);
   const [viewedUser, setViewedUser] = useState<User | null>(null);
 
-  useEffect(() => {
-    fetchUsers();
-  }, []);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
 
-  const fetchUsers = async () => {
+  useEffect(() => {
+    fetchUsers(currentPage);
+  }, [currentPage]);
+
+  const fetchUsers = async (page = 1) => {
     try {
-      const res = await fetch("/api/users");
+      const res = await fetch(`/api/users?page=${page}&limit=${itemsPerPage}`);
       const data = await res.json();
-      setUsers(data);
+      if (data.items) {
+        setUsers(data.items);
+        setTotalPages(data.totalPages || 1);
+        setTotalItems(data.total || 0);
+      } else {
+        setUsers(Array.isArray(data) ? data : []);
+      }
     } catch (err) {
       console.error("Failed to fetch users");
     } finally {
@@ -62,19 +74,19 @@ export default function UsersPage() {
 
   return (
     <AppShell title="Users & Staff">
-      <div className="mx-auto max-w-6xl space-y-6">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="mx-auto max-w-6xl space-y-4 sm:space-y-6">
+        <div className="flex flex-col gap-3 sm:gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h2 className="text-xl font-bold tracking-tight text-foreground">
-              Staff & Admins
+            <h2 className="text-[17px] sm:text-xl font-bold tracking-tight text-foreground leading-tight">
+              Users & Staff
             </h2>
-            <p className="text-sm text-muted-foreground">
-              Manage roles and approve new accounts that signed in via Microsoft 365.
+            <p className="text-[13px] sm:text-sm text-muted-foreground mt-0.5">
+              Manage system access and roles.
             </p>
           </div>
         </div>
 
-        <div className="apple-card overflow-hidden">
+        <div className="apple-card overflow-hidden p-0 sm:p-0">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
               <thead className="bg-muted/50 text-muted-foreground">
@@ -117,16 +129,24 @@ export default function UsersPage() {
                         {user.email}
                       </td>
                       <td className="px-6 py-4">
-                        <select
+                        <Select
                           value={user.role}
-                          onChange={(e) =>
-                            updateUser(user.id, { role: e.target.value as any })
+                          onValueChange={(val: string | null) =>
+                            updateUser(user.id, { role: val as any })
                           }
-                          className="h-8 rounded-lg border border-border/50 bg-background px-2 text-xs focus:outline-none focus:ring-1 focus:ring-primary"
+                          items={[
+                            { value: "STAFF", label: "Staff" },
+                            { value: "ADMIN", label: "Admin" }
+                          ]}
                         >
-                          <option value="STAFF">Staff</option>
-                          <option value="ADMIN">Admin</option>
-                        </select>
+                          <SelectTrigger className="h-8 w-24">
+                            <SelectValue placeholder="Select Role" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="STAFF">Staff</SelectItem>
+                            <SelectItem value="ADMIN">Admin</SelectItem>
+                          </SelectContent>
+                        </Select>
                       </td>
                       <td className="px-6 py-4">
                         <span
@@ -184,6 +204,35 @@ export default function UsersPage() {
                 )}
               </tbody>
             </table>
+            
+            {!loading && users.length > 0 && (
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-border/50 px-6 py-4 bg-muted/10">
+                <div className="text-xs text-muted-foreground text-center sm:text-left">
+                  Showing <span className="font-semibold text-foreground">{(currentPage - 1) * itemsPerPage + 1}</span> to <span className="font-semibold text-foreground">{Math.min(currentPage * itemsPerPage, totalItems)}</span> of{" "}
+                  <span className="font-semibold text-foreground">{totalItems}</span> users
+                </div>
+                
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                    disabled={currentPage === 1}
+                    className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-border/50 bg-background text-muted-foreground hover:bg-muted disabled:opacity-50 transition-colors"
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </button>
+                  <span className="text-xs font-medium text-foreground min-w-[70px] text-center">
+                    Page {currentPage} of {totalPages}
+                  </span>
+                  <button
+                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                    disabled={currentPage === totalPages}
+                    className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-border/50 bg-background text-muted-foreground hover:bg-muted disabled:opacity-50 transition-colors"
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>

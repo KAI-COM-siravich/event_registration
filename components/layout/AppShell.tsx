@@ -12,23 +12,26 @@ import {
   Users,
   X,
   CalendarDays,
-  Settings,
   LogOut,
   UserCog,
   ShieldAlert,
+  FileText,
+  Settings,
 } from "lucide-react";
-import { signOut } from "next-auth/react";
+import { signOut, useSession } from "next-auth/react";
 import { BottomNav } from "../ui/BottomNav";
 
 const NAV_ITEMS = [
   { href: "/admin", label: "Dashboard", Icon: LayoutDashboard, exact: true },
-  { href: "/events", label: "Events", Icon: CalendarDays, exact: false },
+  { href: "/admin/registrations", label: "Registrations", Icon: Users, exact: false },
+  { href: "/events", label: "Events", Icon: CalendarDays, exact: false, adminOnly: true },
   { href: "/check-in", label: "Check-In", Icon: QrCode, exact: false },
   { href: "/booths", label: "Booths", Icon: Store, exact: false },
   { href: "/rewards", label: "Rewards", Icon: Gift, exact: false },
-  { href: "/admin/users", label: "Users & Staff", Icon: UserCog, exact: false },
+  { href: "/admin/users", label: "Users & Staff", Icon: UserCog, exact: false, adminOnly: true },
   { href: "/admin/blacklist", label: "Blacklist", Icon: ShieldAlert, exact: false },
-  { href: "/admin/settings", label: "Settings", Icon: Settings, exact: false },
+  { href: "/admin/logs", label: "Logs", Icon: FileText, exact: false, adminOnly: true },
+  { href: "/admin/settings", label: "Settings", Icon: Settings, exact: false, adminOnly: true },
 ] as const;
 
 interface AppShellProps {
@@ -40,6 +43,7 @@ export function AppShell({ children, title }: AppShellProps) {
   const [open, setOpen] = useState(false);
   const [orgName, setOrgName] = useState("Event Platform");
   const pathname = usePathname();
+  const { data: session } = useSession();
 
   useEffect(() => {
     fetch("/api/settings")
@@ -100,7 +104,11 @@ export function AppShell({ children, title }: AppShellProps) {
           <p className="mb-1.5 px-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70">
             Management
           </p>
-          {NAV_ITEMS.map(({ href, label, Icon, exact }) => {
+          {NAV_ITEMS.map((item) => {
+            if ('adminOnly' in item && item.adminOnly && (session?.user as any)?.role !== "ADMIN") {
+              return null;
+            }
+            const { href, label, Icon, exact } = item;
             const active = isActive(href, exact);
             return (
               <Link
@@ -122,14 +130,18 @@ export function AppShell({ children, title }: AppShellProps) {
         </nav>
 
         {/* Footer */}
-        <div className="p-2 border-t border-border/50 space-y-1">
-          <Link
-            href="/register"
-            className="flex items-center justify-center gap-2 rounded-[0.6rem] bg-sidebar-accent/50 px-3 py-2 text-[13px] font-medium text-sidebar-foreground transition-colors hover:bg-sidebar-accent"
-          >
-            <Users className="h-4 w-4 shrink-0" aria-hidden="true" />
-            Register Customer
-          </Link>
+        <div className="p-2 border-t border-border/50 flex flex-col gap-1">
+          {session?.user && (
+            <div className="flex items-center gap-3 rounded-[0.6rem] bg-muted/30 px-3 py-2 mb-1 border border-border/30">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/20 text-primary font-bold text-xs shadow-sm">
+                {session.user.name?.charAt(0).toUpperCase() || session.user.email?.charAt(0).toUpperCase() || "A"}
+              </div>
+              <div className="flex flex-col overflow-hidden leading-tight">
+                <span className="text-[13px] font-semibold text-foreground truncate">{session.user.name || "Admin User"}</span>
+                <span className="text-[10px] text-muted-foreground truncate">{session.user.email}</span>
+              </div>
+            </div>
+          )}
           <button
             onClick={() => signOut({ callbackUrl: "/" })}
             className="w-full flex items-center justify-center gap-2 rounded-[0.6rem] px-3 py-2 text-[13px] font-medium text-muted-foreground hover:bg-red-500/10 hover:text-red-500 transition-colors"
@@ -144,11 +156,11 @@ export function AppShell({ children, title }: AppShellProps) {
       <div className="flex flex-1 flex-col overflow-hidden relative linear-grid">
         {/* Topbar */}
         <header className="absolute inset-x-0 top-0 z-30 flex h-14 shrink-0 items-center gap-3 bg-background/70 backdrop-blur-xl px-4 lg:px-6 border-b border-border/50">
-          {/* Hamburger — visible on tablet only (hidden on mobile since bottom nav exists, hidden on desktop since sidebar is always open) */}
+          {/* Hamburger — visible on mobile and tablet */}
           <button
             type="button"
             aria-label="Open navigation"
-            className="rounded-full p-1.5 text-muted-foreground hover:bg-muted hidden sm:flex lg:hidden transition-colors touch-target"
+            className="rounded-full p-1.5 text-muted-foreground hover:bg-muted flex lg:hidden transition-colors touch-target"
             onClick={() => setOpen(true)}
           >
             <Menu className="h-5 w-5" />

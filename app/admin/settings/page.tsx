@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { AppShell } from "../../../components/layout/AppShell";
 import { Copy, CheckCircle2, Webhook, Loader2, Save } from "lucide-react";
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "../../../components/ui/select";
 
 export default function SettingsPage() {
   const [copied, setCopied] = useState(false);
@@ -29,11 +30,13 @@ export default function SettingsPage() {
     AZURE_AD_CLIENT_ID: "",
     AZURE_AD_CLIENT_SECRET: "",
     AZURE_AD_TENANT_ID: "",
+    MAIL_SENDER_ADDRESS: "",
   });
   const [loading, setLoading] = useState(true);
   const [savingApi, setSavingApi] = useState(false);
+  const [savingAuth, setSavingAuth] = useState(false);
   const [savingPrefixes, setSavingPrefixes] = useState(false);
-  const [message, setMessage] = useState({ apiType: "", apiText: "", prefixesType: "", prefixesText: "" });
+  const [message, setMessage] = useState({ apiType: "", apiText: "", authType: "", authText: "", prefixesType: "", prefixesText: "" });
 
   useEffect(() => {
     setOrigin(window.location.origin);
@@ -64,6 +67,7 @@ export default function SettingsPage() {
             AZURE_AD_CLIENT_ID: data.AZURE_AD_CLIENT_ID || "",
             AZURE_AD_CLIENT_SECRET: data.AZURE_AD_CLIENT_SECRET || "",
             AZURE_AD_TENANT_ID: data.AZURE_AD_TENANT_ID || "",
+            MAIL_SENDER_ADDRESS: data.MAIL_SENDER_ADDRESS || "",
           });
         }
       })
@@ -77,11 +81,14 @@ export default function SettingsPage() {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const handleSaveConfig = async (e: React.FormEvent, section: 'api' | 'prefixes' = 'api') => {
+  const handleSaveConfig = async (e: React.FormEvent, section: 'api' | 'prefixes' | 'auth' = 'api') => {
     e.preventDefault();
     if (section === 'api') {
       setSavingApi(true);
       setMessage(prev => ({ ...prev, apiType: "", apiText: "" }));
+    } else if (section === 'auth') {
+      setSavingAuth(true);
+      setMessage(prev => ({ ...prev, authType: "", authText: "" }));
     } else {
       setSavingPrefixes(true);
       setMessage(prev => ({ ...prev, prefixesType: "", prefixesText: "" }));
@@ -99,6 +106,9 @@ export default function SettingsPage() {
       if (section === 'api') {
         setMessage(prev => ({ ...prev, apiType: "success", apiText: "API settings saved successfully!" }));
         setTimeout(() => setMessage(prev => ({ ...prev, apiType: "", apiText: "" })), 3000);
+      } else if (section === 'auth') {
+        setMessage(prev => ({ ...prev, authType: "success", authText: "Auth settings saved successfully!" }));
+        setTimeout(() => setMessage(prev => ({ ...prev, authType: "", authText: "" })), 3000);
       } else {
         setMessage(prev => ({ ...prev, prefixesType: "success", prefixesText: "ID prefixes saved successfully!" }));
         setTimeout(() => setMessage(prev => ({ ...prev, prefixesType: "", prefixesText: "" })), 3000);
@@ -106,43 +116,46 @@ export default function SettingsPage() {
     } catch (err) {
       if (section === 'api') {
         setMessage(prev => ({ ...prev, apiType: "error", apiText: "Failed to save API settings." }));
+      } else if (section === 'auth') {
+        setMessage(prev => ({ ...prev, authType: "error", authText: "Failed to save Auth settings." }));
       } else {
         setMessage(prev => ({ ...prev, prefixesType: "error", prefixesText: "Failed to save ID prefixes." }));
       }
     } finally {
       if (section === 'api') setSavingApi(false);
+      else if (section === 'auth') setSavingAuth(false);
       else setSavingPrefixes(false);
     }
   };
 
   return (
     <AppShell title="Settings">
-      <div className="mx-auto max-w-5xl space-y-6">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="mx-auto max-w-6xl space-y-4 sm:space-y-6">
+        <div className="flex flex-col gap-3 sm:gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h2 className="text-xl font-bold tracking-tight text-foreground">
+            <h2 className="text-[17px] sm:text-xl font-bold tracking-tight text-foreground leading-tight">
               Platform Settings
             </h2>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-[13px] sm:text-sm text-muted-foreground mt-0.5">
               Manage registration links and third-party API integrations.
             </p>
           </div>
         </div>
 
-        <div className="grid gap-6 md:grid-cols-2">
+        <div className="grid gap-4 sm:gap-6 md:grid-cols-2">
           {/* Share Link Card */}
-          <div className="apple-card animate-in fade-in slide-in-from-bottom-4 duration-500 delay-100">
-            <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10">
-              <Copy className="h-5 w-5 text-primary" />
+          <div className="apple-card p-4 sm:p-6 animate-in fade-in slide-in-from-bottom-4 duration-500 delay-100">
+            <div className="mb-3 sm:mb-4 flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-xl bg-primary/10">
+              <Copy className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
             </div>
-            <h3 className="text-lg font-semibold tracking-tight text-foreground">
+            <h3 className="text-[16px] sm:text-lg font-semibold tracking-tight text-foreground">
               Share Registration Form
             </h3>
-            <p className="mb-6 mt-2 text-[15px] text-muted-foreground">
+            <p className="mb-4 sm:mb-6 mt-1 sm:mt-2 text-[13px] sm:text-[15px] text-muted-foreground leading-tight">
               Send this secure link to your customers so they can register for your events. They will not be able to access the admin dashboard.
             </p>
             
-            <div className="flex items-center gap-3 rounded-xl border border-border/50 bg-muted/20 p-2">
+            <div className="flex items-center gap-2 sm:gap-3 rounded-xl border border-border/50 bg-muted/20 p-2">
               <code className="flex-1 overflow-hidden text-ellipsis whitespace-nowrap px-2 text-sm text-muted-foreground">
                 {origin ? `${origin}/register` : '.../register'}
               </code>
@@ -165,12 +178,15 @@ export default function SettingsPage() {
             </div>
 
             <div className="mt-6 rounded-xl border border-border/50 bg-muted/5 p-4 overflow-hidden">
-              <div className="mb-3 text-xs font-bold text-muted-foreground uppercase tracking-wider">Form Preview</div>
-              <div className="relative h-150 w-full overflow-hidden rounded-xl border border-border/50 bg-white shadow-sm dark:bg-zinc-950">
+              <div className="mb-3 flex items-center justify-between">
+                <div className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Interactive Form Preview</div>
+                <a href={`${origin}/register`} target="_blank" rel="noreferrer" className="text-xs text-primary hover:underline font-medium">Open in new tab ↗</a>
+              </div>
+              <div className="relative h-[500px] w-full overflow-hidden rounded-xl border border-border/50 bg-white shadow-sm dark:bg-zinc-950">
                 {origin ? (
                   <iframe 
                     src={`${origin}/register`} 
-                    className="absolute left-0 top-0 h-[166.67%] w-[166.67%] origin-top-left scale-[0.6] border-0 pointer-events-none"
+                    className="absolute left-0 top-0 h-[166.67%] w-[166.67%] origin-top-left scale-[0.6] border-0"
                     title="Registration Form Preview"
                   />
                 ) : (
@@ -183,14 +199,14 @@ export default function SettingsPage() {
           </div>
 
           {/* API Integrations Card */}
-          <div className="apple-card animate-in fade-in slide-in-from-bottom-4 duration-500 delay-200">
-            <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-xl bg-blue-500/10">
-              <Webhook className="h-5 w-5 text-blue-500" />
+          <div className="apple-card p-4 sm:p-6 animate-in fade-in slide-in-from-bottom-4 duration-500 delay-200">
+            <div className="mb-3 sm:mb-4 flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-xl bg-blue-500/10">
+              <Webhook className="h-4 w-4 sm:h-5 sm:w-5 text-blue-500" />
             </div>
-            <h3 className="text-lg font-semibold tracking-tight text-foreground">
+            <h3 className="text-[16px] sm:text-lg font-semibold tracking-tight text-foreground">
               Platform Configuration
             </h3>
-            <p className="mb-6 mt-2 text-[15px] text-muted-foreground">
+            <p className="mb-4 sm:mb-6 mt-1 sm:mt-2 text-[13px] sm:text-[15px] text-muted-foreground leading-tight">
               Configure endpoints, rules, and messaging templates.
             </p>
             
@@ -203,26 +219,22 @@ export default function SettingsPage() {
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label htmlFor="auto-approve" className="mb-1.5 block text-sm font-medium">Auto-Approve Registrations</label>
-                    <select
-                      id="auto-approve"
-                      className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm focus:ring-2 focus:ring-primary"
+                    <Select
                       value={apiConfig.AUTO_APPROVE}
-                      onChange={(e) => setApiConfig({ ...apiConfig, AUTO_APPROVE: e.target.value })}
+                      onValueChange={(val: string | null) => setApiConfig({ ...apiConfig, AUTO_APPROVE: val as string })}
+                      items={[
+                        { value: "true", label: "Yes, automatically approve" },
+                        { value: "false", label: "No, manual approval required" }
+                      ]}
                     >
-                      <option value="true">Yes, automatically approve</option>
-                      <option value="false">No, manual approval required</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label htmlFor="min-booths-for-reward" className="mb-1.5 block text-sm font-medium">Min Booths for Reward</label>
-                    <input
-                      id="min-booths-for-reward"
-                      type="number"
-                      min="1"
-                      className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm focus:ring-2 focus:ring-primary"
-                      value={apiConfig.MIN_BOOTH_VISITS_FOR_REWARD}
-                      onChange={(e) => setApiConfig({ ...apiConfig, MIN_BOOTH_VISITS_FOR_REWARD: e.target.value })}
-                    />
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select approval mode" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="true">Yes, automatically approve</SelectItem>
+                        <SelectItem value="false">No, manual approval required</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
                 </div>
 
@@ -313,7 +325,7 @@ export default function SettingsPage() {
                 <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
               </div>
             ) : (
-              <form onSubmit={(e) => handleSaveConfig(e, 'api')} className="space-y-4">
+              <form onSubmit={(e) => handleSaveConfig(e, 'auth')} className="space-y-4">
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div>
                     <label htmlFor="azure-ad-tenant-id" className="mb-1 block text-sm font-medium text-foreground">Azure AD Tenant ID</label>
@@ -348,21 +360,32 @@ export default function SettingsPage() {
                       placeholder="Leave blank to use environment variable fallback"
                     />
                   </div>
+                  <div className="sm:col-span-2">
+                    <label htmlFor="mail-sender-address" className="mb-1 block text-sm font-medium text-foreground">Microsoft 365 Sender Email Address (For Email via Graph API)</label>
+                    <input
+                      id="mail-sender-address"
+                      type="email"
+                      className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm focus:ring-2 focus:ring-primary"
+                      value={apiConfig.MAIL_SENDER_ADDRESS}
+                      onChange={(e) => setApiConfig({ ...apiConfig, MAIL_SENDER_ADDRESS: e.target.value })}
+                      placeholder="e.g. no-reply@yourdomain.com"
+                    />
+                  </div>
                 </div>
 
                 <div className="flex flex-col gap-3 pt-4 border-t border-border mt-4">
-                  {message.apiType === 'success' && (
-                    <p className="text-sm font-medium text-emerald-600">{message.apiText}</p>
+                  {message.authType === 'success' && (
+                    <p className="text-sm font-medium text-emerald-600">{message.authText}</p>
                   )}
-                  {message.apiType === 'error' && (
-                    <p className="text-sm font-medium text-red-600">{message.apiText}</p>
+                  {message.authType === 'error' && (
+                    <p className="text-sm font-medium text-red-600">{message.authText}</p>
                   )}
                   <button
                     type="submit"
-                    disabled={savingApi}
+                    disabled={savingAuth}
                     className="flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50 transition-colors sm:w-auto sm:self-end"
                   >
-                    {savingApi ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                    {savingAuth ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
                     Save Auth Settings
                   </button>
                 </div>

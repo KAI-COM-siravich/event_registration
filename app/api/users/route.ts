@@ -1,21 +1,40 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import { logAuditAction } from "@/lib/auditLog";
 import { getServerSession } from "next-auth/next";
+import { getAuthOptions } from "../auth/[...nextauth]/route";
 
 export async function GET(req: Request) {
   try {
-    const session = await getServerSession();
-    // In production, verify session.user.role === 'ADMIN'
+    const session = await getServerSession(await getAuthOptions());
+    if ((session?.user as any)?.role !== 'ADMIN') {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
 
-    // Fetch all users who are not CUSTOMER
-    const users = await prisma.user.findMany({
-      where: {
-        role: { in: ["STAFF", "ADMIN"] },
-      },
-      orderBy: { createdAt: 'desc' }
+    const { searchParams } = new URL(req.url);
+    const page = parseInt(searchParams.get("page") || "1", 10);
+    const limit = parseInt(searchParams.get("limit") || "10", 10);
+    const skip = (page - 1) * limit;
+
+    const where = { role: { in: ["STAFF", "ADMIN"] as const } };
+
+    const [users, total] = await Promise.all([
+      prisma.user.findMany({
+        where,
+        skip,
+        take: limit,
+        orderBy: { createdAt: 'desc' }
+      }),
+      prisma.user.count({ where }),
+    ]);
+
+    return NextResponse.json({
+      items: users,
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
     });
-
-    return NextResponse.json(users);
   } catch (error) {
     return NextResponse.json({ error: "Failed to fetch users" }, { status: 500 });
   }
@@ -23,8 +42,10 @@ export async function GET(req: Request) {
 
 export async function PATCH(req: Request) {
   try {
-    const session = await getServerSession();
-    // In production, verify session.user.role === 'ADMIN'
+    const session = await getServerSession(await getAuthOptions());
+    if ((session?.user as any)?.role !== 'ADMIN') {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
 
     const { userId, role, status } = await req.json();
 
@@ -35,6 +56,8 @@ export async function PATCH(req: Request) {
         ...(status && { status }),
       },
     });
+
+    await logAuditAction(`Updated User: ${updatedUser.firstName} ${updatedUser.lastName} (${updatedUser.email}) - Role: ${updatedUser.role}, Status: ${updatedUser.status}`);
 
     return NextResponse.json(updatedUser);
   } catch (error) {

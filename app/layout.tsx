@@ -6,6 +6,9 @@ export const metadata: Metadata = {
   description: "Professional Event Registration System",
 };
 
+import { Providers } from "@/components/Providers";
+import { DemoRoleSwitcher } from "@/components/ui/DemoRoleSwitcher";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -17,7 +20,12 @@ export default function RootLayout({
       className="h-full antialiased"
       suppressHydrationWarning
     >
-      <body className="min-h-full flex flex-col font-sans" suppressHydrationWarning>{children}</body>
+      <body className="min-h-full flex flex-col font-sans" suppressHydrationWarning>
+        <Providers>
+          {children}
+          <DemoRoleSwitcher />
+        </Providers>
+      </body>
     </html>
   );
 }

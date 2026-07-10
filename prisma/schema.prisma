@@ -66,6 +66,7 @@ model Event {
   location    String
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+  deletedAt   DateTime?
 
   registrations Registration[] @relation("EventToRegistration")
   booths        Booth[]
@@ -79,6 +80,13 @@ model Registration {
   status         RegistrationStatus @default(PENDING)
   createdAt      DateTime           @default(now())
   updatedAt      DateTime           @updatedAt
+
+  firstName      String             @default("")
+  lastName       String             @default("")
+  email          String             @default("")
+  phone          String?
+  company        String?
+  jobPosition    String?
 
   travelMethod   String?
   needHotel      String?
@@ -112,6 +120,7 @@ model Blacklist {
   active    Boolean  @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  deletedAt DateTime?
 }
 
 model QRCode {
@@ -138,6 +147,7 @@ model Booth {
   eventId   String
   createdAt DateTime     @default(now())
   updatedAt DateTime     @updatedAt
+  deletedAt DateTime?
   event     Event        @relation(fields: [eventId], references: [id])
   visits    BoothVisit[]
 }
@@ -158,6 +168,7 @@ model Reward {
   customerId String
   eventId    String
   createdAt  DateTime @default(now())
+  deletedAt  DateTime?
 
   customer Customer @relation("CustomerToReward", fields: [customerId], references: [id])
   event    Event    @relation("EventToReward", fields: [eventId], references: [id])

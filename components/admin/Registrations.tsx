@@ -1,8 +1,10 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
+import useSWR from "swr";
+import { useSession } from "next-auth/react";
 import ApprovalActions from "./ApprovalActions";
-import { Search, Eye } from "lucide-react";
+import { Search, Eye, ChevronLeft, ChevronRight } from "lucide-react";
 import { DetailModal } from "../ui/DetailModal";
 
 type RegistrationStatus =
@@ -18,6 +20,18 @@ type Registration = {
   eventId?: string;
   status: RegistrationStatus | string;
   createdAt?: string;
+  firstName?: string;
+  lastName?: string;
+  email?: string;
+  phone?: string;
+  company?: string;
+  jobPosition?: string;
+  travelMethod?: string | null;
+  needHotel?: string | null;
+  salesRep?: string | null;
+  plannedUpgrade?: string | null;
+  projectByYear?: string | null;
+  consent?: boolean;
   customer?: {
     user?: {
       firstName?: string;
@@ -25,6 +39,7 @@ type Registration = {
       email?: string;
       phone?: string;
       company?: string;
+      jobPosition?: string;
     };
   };
   event?: {
@@ -68,72 +83,86 @@ function StatusBadge({ status }: { status: string }) {
 }
 
 function getCustomerName(r: Registration): string {
-  const user = r.customer?.user;
+  // Use fields from registration first, fallback to user (for backward compatibility before migration)
+  const fName = r.firstName || r.customer?.user?.firstName;
+  const lName = r.lastName || r.customer?.user?.lastName;
   return (
-    [user?.firstName, user?.lastName].filter(Boolean).join(" ") ||
+    [fName, lName].filter(Boolean).join(" ") ||
     r.customerId ||
     "Unknown"
   );
 }
 
+const fetcher = (url: string) => fetch(url).then((res) => {
+  if (!res.ok) throw new Error("Unable to load registrations");
+  return res.json();
+});
+
 const Registrations = ({ eventId }: { eventId?: string }) => {
-  const [registrations, setRegistrations] = useState<Registration[]>([]);
-  const [error, setError] = useState<string | null>(null);
+  const { data: session } = useSession();
+  const isAdmin = (session?.user as any)?.role === "ADMIN";
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("ALL");
-  const [loading, setLoading] = useState(true);
-  
   const [viewedReg, setViewedReg] = useState<Registration | null>(null);
 
-  useEffect(() => {
-    fetch("/api/registrations")
-      .then((res) => {
-        if (!res.ok) throw new Error("Unable to load registrations");
-        return res.json() as Promise<Registration[]>;
-      })
-      .then((data) => setRegistrations(Array.isArray(data) ? data : []))
-      .catch((err: unknown) =>
-        setError(err instanceof Error ? err.message : "Unable to load registrations")
-      )
-      .finally(() => setLoading(false));
-  }, []);
+  const queryParams = new URLSearchParams({
+    page: currentPage.toString(),
+    limit: itemsPerPage.toString(),
+    search,
+    status: statusFilter,
+    ...(eventId && { eventId })
+  });
 
-  const handleStatusChange = (id: string, newStatus: string) => {
-    setRegistrations((prev) =>
-      prev.map((r) => (r.id === id ? { ...r, status: newStatus } : r))
+  const { data, error: swrError, mutate } = useSWR(`/api/registrations?${queryParams.toString()}`, fetcher, { refreshInterval: 5000 });
+  const registrations = data?.items || [];
+  const totalPages = data?.totalPages || 1;
+  const totalItems = data?.total || 0;
+  const statusCounts = data?.statusCounts || { ALL: 0 };
+  
+  const error = swrError?.message || null;
+  const loading = !data && !swrError;
+
+  const handleStatusChange = async (id: string, newStatus: string) => {
+    // Optimistic UI update
+    await mutate((prev: any) => 
+      prev ? { ...prev, items: prev.items.map((r: any) => (r.id === id ? { ...r, status: newStatus } : r)) } : prev, 
+      false
     );
   };
 
-  const filtered = useMemo(() => {
-    const q = search.toLowerCase();
-    return registrations.filter((r) => {
-      const name = getCustomerName(r).toLowerCase();
-      const email = (r.customer?.user?.email ?? "").toLowerCase();
-      const event = (r.event?.name ?? "").toLowerCase();
-      const matchesSearch =
-        !q || name.includes(q) || email.includes(q) || event.includes(q);
-      const matchesStatus =
-        statusFilter === "ALL" || r.status === statusFilter;
-      const matchesEvent = !eventId || r.eventId === eventId;
-      return matchesSearch && matchesStatus && matchesEvent;
-    });
-  }, [registrations, search, statusFilter, eventId]);
+  // Filtered is now just registrations since backend does it
+  const filtered = registrations;
+  const paginatedData = registrations;
 
   const mapRegistrationForModal = (r: Registration) => ({
     "Registration ID": r.id,
     "Customer Name": getCustomerName(r),
-    "Email": r.customer?.user?.email,
-    "Phone": r.customer?.user?.phone,
-    "Company": r.customer?.user?.company,
+    "Email": r.email || r.customer?.user?.email,
+    "Phone": r.phone || r.customer?.user?.phone,
+    "Company": r.company || r.customer?.user?.company,
+    "Job Position": r.jobPosition || r.customer?.user?.jobPosition,
     "Event": r.event?.name || r.eventId,
     "Status": r.status,
-    "Created At": r.createdAt ? new Date(r.createdAt).toLocaleString() : "Unknown",
+    "Travel Method": r.travelMethod || "—",
+    "Need Hotel": r.needHotel || "—",
+    "Sales Rep": r.salesRep || "—",
+    "Planned Upgrade": r.plannedUpgrade || "—",
+    "Project By Year": r.projectByYear || "—",
+    "Consent": r.consent ? "Yes" : "No",
+    "Created At": r.createdAt ? new Date(r.createdAt).toLocaleString("en-GB", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }) : "Unknown",
     "Blacklist Warning": r.blacklistWarning || "None",
   });
 
   const exportToCSV = () => {
     if (filtered.length === 0) return;
-    const headers = ["Registration ID", "Customer Name", "Email", "Phone", "Company", "Event", "Status", "Created At", "Blacklist Warning"];
+    const headers = [
+      "Registration ID", "Customer Name", "Email", "Phone", "Company", "Job Position", 
+      "Event", "Status", "Travel Method", "Need Hotel", "Sales Rep", "Planned Upgrade", 
+      "Project By Year", "Consent", "Created At", "Blacklist Warning"
+    ];
     const rows = filtered.map(r => {
       const mapped = mapRegistrationForModal(r);
       return [
@@ -142,8 +171,15 @@ const Registrations = ({ eventId }: { eventId?: string }) => {
         mapped["Email"] || "",
         mapped["Phone"] || "",
         mapped["Company"] || "",
+        mapped["Job Position"] || "",
         mapped["Event"] || "",
         mapped["Status"],
+        mapped["Travel Method"],
+        mapped["Need Hotel"],
+        mapped["Sales Rep"],
+        mapped["Planned Upgrade"],
+        mapped["Project By Year"],
+        mapped["Consent"],
         mapped["Created At"],
         mapped["Blacklist Warning"]
       ].map(val => `"${String(val).replace(/"/g, '""')}"`).join(",");
@@ -160,8 +196,47 @@ const Registrations = ({ eventId }: { eventId?: string }) => {
     document.body.removeChild(link);
   };
 
+  const statusCounts = useMemo(() => {
+    const counts: Record<string, number> = { ALL: registrations.length };
+    ALL_STATUSES.slice(1).forEach(status => (counts[status] = 0));
+    registrations.forEach(r => {
+      const s = r.status.toUpperCase();
+      if (counts[s] !== undefined) counts[s]++;
+    });
+    return counts;
+  }, [registrations]);
+
   return (
     <div className="space-y-6">
+      {/* Status Badges Filter */}
+      <div className="flex flex-wrap gap-2">
+        {ALL_STATUSES.map((s) => {
+          const count = statusCounts[s] || 0;
+          const isActive = statusFilter === s;
+          const activeStyle = s === "ALL" 
+            ? "bg-foreground text-background ring-foreground" 
+            : STATUS_STYLES[s];
+          const inactiveStyle = "bg-muted/30 text-muted-foreground ring-border/50 hover:bg-muted/50";
+          
+          return (
+            <button
+              key={s}
+              onClick={() => setStatusFilter(s)}
+              className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold ring-1 ring-inset transition-colors ${
+                isActive ? activeStyle : inactiveStyle
+              }`}
+            >
+              {s === "ALL" ? "All Statuses" : s}
+              <span className={`rounded-full px-1.5 py-0.5 text-[10px] ${
+                isActive ? "bg-background/20" : "bg-muted-foreground/10"
+              }`}>
+                {count}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+
       {/* Toolbar */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
         <div className="relative max-w-sm flex-1">
@@ -178,18 +253,7 @@ const Registrations = ({ eventId }: { eventId?: string }) => {
             className="h-10 w-full rounded-full border-0 bg-muted/50 pl-11 pr-4 text-[15px] placeholder:text-muted-foreground/70 ring-1 ring-inset ring-border/50 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary focus:bg-background transition-all"
           />
         </div>
-        <select
-          id="reg-status-filter"
-          value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value)}
-          className="h-10 rounded-full border-0 bg-muted/50 px-4 text-[15px] ring-1 ring-inset ring-border/50 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary focus:bg-background transition-all"
-        >
-          {ALL_STATUSES.map((s) => (
-            <option key={s} value={s}>
-              {s === "ALL" ? "All Statuses" : s}
-            </option>
-          ))}
-        </select>
+
         <button
           onClick={exportToCSV}
           disabled={filtered.length === 0}
@@ -224,7 +288,7 @@ const Registrations = ({ eventId }: { eventId?: string }) => {
           </thead>
           <tbody className="divide-y divide-border/50">
             {loading
-              ? Array.from({ length: 5 }).map((_, i) => (
+              ? Array.from({ length: 10 }).map((_, i) => (
                   <tr key={i} className="animate-pulse">
                     {Array.from({ length: 5 }).map((__, j) => (
                       <td key={j} className="px-6 py-4">
@@ -233,8 +297,8 @@ const Registrations = ({ eventId }: { eventId?: string }) => {
                     ))}
                   </tr>
                 ))
-              : filtered.length > 0
-              ? filtered.map((reg) => (
+              : paginatedData.length > 0
+              ? paginatedData.map((reg) => (
                   <tr
                     key={reg.id}
                     className="transition-colors hover:bg-muted/30 group cursor-pointer"
@@ -254,7 +318,7 @@ const Registrations = ({ eventId }: { eventId?: string }) => {
                       </div>
                     </td>
                     <td className="px-6 py-4 text-muted-foreground">
-                      {reg.customer?.user?.email ?? "—"}
+                      {reg.email || reg.customer?.user?.email || "—"}
                     </td>
                     <td className="px-6 py-4 text-muted-foreground">
                       {reg.event?.name ?? reg.eventId ?? "—"}
@@ -264,11 +328,13 @@ const Registrations = ({ eventId }: { eventId?: string }) => {
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-2">
-                        <ApprovalActions
-                          registrationId={reg.id}
-                          currentStatus={reg.status}
-                          onStatusChange={handleStatusChange}
-                        />
+                        {isAdmin && (
+                          <ApprovalActions
+                            registrationId={reg.id}
+                            currentStatus={reg.status}
+                            onStatusChange={handleStatusChange}
+                          />
+                        )}
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
@@ -298,10 +364,31 @@ const Registrations = ({ eventId }: { eventId?: string }) => {
           </tbody>
         </table>
         {!loading && filtered.length > 0 && (
-          <div className="border-t border-border/50 px-6 py-4 text-xs text-muted-foreground bg-muted/10">
-            Showing <span className="font-semibold text-foreground">{filtered.length}</span> of{" "}
-            <span className="font-semibold text-foreground">{registrations.length}</span> registration
-            {registrations.length !== 1 ? "s" : ""}
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-border/50 px-6 py-4 bg-muted/10">
+            <div className="text-xs text-muted-foreground text-center sm:text-left">
+              Showing <span className="font-semibold text-foreground">{totalItems === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1}</span> to <span className="font-semibold text-foreground">{Math.min(currentPage * itemsPerPage, totalItems)}</span> of{" "}
+              <span className="font-semibold text-foreground">{totalItems}</span> registration{totalItems !== 1 ? "s" : ""}
+            </div>
+            
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+                className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-border/50 bg-background text-muted-foreground hover:bg-muted disabled:opacity-50 transition-colors"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </button>
+              <span className="text-xs font-medium text-foreground min-w-[70px] text-center">
+                Page {currentPage} of {totalPages}
+              </span>
+              <button
+                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                disabled={currentPage === totalPages}
+                className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-border/50 bg-background text-muted-foreground hover:bg-muted disabled:opacity-50 transition-colors"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </button>
+            </div>
           </div>
         )}
       </div>

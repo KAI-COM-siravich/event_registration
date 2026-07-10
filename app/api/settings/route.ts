@@ -19,6 +19,11 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
+    const session = await getServerSession(await getAuthOptions());
+    if ((session?.user as any)?.role !== 'ADMIN') {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+
     const body = await request.json();
     
     if (typeof body !== "object" || !body) {
@@ -37,7 +42,6 @@ export async function POST(request: Request) {
 
     await Promise.all(updates);
 
-    const session = await getServerSession(await getAuthOptions());
     if (session?.user?.email) {
       const dbUser = await prisma.user.findUnique({
         where: { email: session.user.email },

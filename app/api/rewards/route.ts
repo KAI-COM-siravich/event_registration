@@ -15,6 +15,11 @@ export async function GET() {
 export async function POST(request: Request) {
   let body: unknown;
   try {
+    const session = await getServerSession(await getAuthOptions());
+    if ((session?.user as any)?.role !== 'ADMIN') {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+
     body = await request.json();
   } catch {
     return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });

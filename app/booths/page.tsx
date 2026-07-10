@@ -2,9 +2,11 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useSession } from "next-auth/react";
 import { AppShell } from "../../components/layout/AppShell";
 import { Store, Loader2, Plus, X, Edit2, Trash2, QrCode, Eye } from "lucide-react";
 import { DetailModal } from "../../components/ui/DetailModal";
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "../../components/ui/select";
 
 type Event = {
   id: string;
@@ -19,6 +21,8 @@ type Booth = {
 };
 
 export default function BoothsPage() {
+  const { data: session } = useSession();
+  const isAdmin = (session?.user as any)?.role === "ADMIN";
   const [booths, setBooths] = useState<Booth[]>([]);
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
@@ -131,23 +135,25 @@ export default function BoothsPage() {
 
   return (
     <AppShell title="Booths Management">
-      <div className="mx-auto max-w-5xl space-y-6">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="mx-auto max-w-5xl space-y-4 sm:space-y-6">
+        <div className="flex flex-col gap-3 sm:gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h2 className="text-xl font-bold tracking-tight text-foreground">
+            <h2 className="text-[17px] sm:text-xl font-bold tracking-tight text-foreground leading-tight">
               Booths
             </h2>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-[13px] sm:text-sm text-muted-foreground mt-0.5">
               Manage exhibitor booths for your events.
             </p>
           </div>
-          <button
-            onClick={openCreateForm}
-            className="inline-flex h-9 items-center justify-center gap-2 rounded-lg bg-foreground px-4 text-sm font-medium text-background transition-colors hover:bg-foreground/90"
-          >
-            <Plus className="h-4 w-4" />
-            Add Booth
-          </button>
+          {isAdmin && (
+            <button
+              onClick={openCreateForm}
+              className="inline-flex h-9 items-center justify-center gap-2 rounded-lg bg-foreground px-4 text-[13px] sm:text-sm font-medium text-background transition-colors hover:bg-foreground/90 w-full sm:w-auto"
+            >
+              <Plus className="h-4 w-4" />
+              Add Booth
+            </button>
+          )}
         </div>
 
         {showForm && (
@@ -191,21 +197,26 @@ export default function BoothsPage() {
                   <label className="text-[13px] font-medium text-muted-foreground">
                     Assign Event *
                   </label>
-                  <select
-                    required
+                  <Select
                     value={formData.eventId}
-                    onChange={(e) =>
-                      setFormData({ ...formData, eventId: e.target.value })
-                    }
-                    className="flex h-10 w-full rounded-lg border border-border/50 bg-background px-3 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    onValueChange={(val: string | null) => setFormData({ ...formData, eventId: val as string })}
+                    items={[
+                      { value: "", label: "Select an event..." },
+                      ...events.map(e => ({ value: e.id, label: e.name }))
+                    ]}
                   >
-                    <option value="" disabled>Select an event...</option>
-                    {events.map((evt) => (
-                      <option key={evt.id} value={evt.id}>
-                        {evt.name}
-                      </option>
-                    ))}
-                  </select>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select an event..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="" disabled>Select an event...</SelectItem>
+                      {events.map((evt) => (
+                        <SelectItem key={evt.id} value={evt.id}>
+                          {evt.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
 
@@ -257,12 +268,16 @@ export default function BoothsPage() {
                           <button onClick={(e) => { e.stopPropagation(); setViewedBooth(booth); }} className="p-2 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-lg transition-colors">
                             <Eye className="h-4 w-4" />
                           </button>
-                          <button onClick={(e) => { e.stopPropagation(); openEditForm(booth); }} className="inline-flex h-8 items-center justify-center gap-1 rounded-lg bg-blue-500/10 px-3 text-xs font-medium text-blue-500 hover:bg-blue-500/20 transition-colors">
-                            <Edit2 className="h-3.5 w-3.5" /> Edit
-                          </button>
-                          <button onClick={(e) => { e.stopPropagation(); handleDelete(booth.id); }} className="inline-flex h-8 items-center justify-center gap-1 rounded-lg bg-red-500/10 px-3 text-xs font-medium text-red-500 hover:bg-red-500/20 transition-colors">
-                            <Trash2 className="h-3.5 w-3.5" /> Delete
-                          </button>
+                          {isAdmin && (
+                            <button onClick={(e) => { e.stopPropagation(); openEditForm(booth); }} className="inline-flex h-8 items-center justify-center gap-1 rounded-lg bg-blue-500/10 px-3 text-xs font-medium text-blue-500 hover:bg-blue-500/20 transition-colors">
+                              <Edit2 className="h-3.5 w-3.5" /> Edit
+                            </button>
+                          )}
+                          {isAdmin && (
+                            <button onClick={(e) => { e.stopPropagation(); handleDelete(booth.id); }} className="inline-flex h-8 items-center justify-center gap-1 rounded-lg bg-red-500/10 px-3 text-xs font-medium text-red-500 hover:bg-red-500/20 transition-colors">
+                              <Trash2 className="h-3.5 w-3.5" /> Delete
+                            </button>
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -291,25 +306,29 @@ export default function BoothsPage() {
               </div>
             ) : (
               booths.map((booth) => (
-                <div key={booth.id} className="p-4 flex items-center gap-3 cursor-pointer active:bg-muted/30 transition-colors"
+                <div key={booth.id} className="p-3 flex items-center gap-2.5 cursor-pointer active:bg-muted/30 transition-colors"
                   onClick={() => setViewedBooth(booth)}>
-                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-600">
-                    <Store className="h-5 w-5" />
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[0.6rem] bg-emerald-500/10 text-emerald-600">
+                    <Store className="h-4 w-4" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-[15px] font-semibold text-foreground truncate">{booth.name}</p>
-                    <p className="text-[12px] text-muted-foreground">{booth.event?.name}</p>
+                    <p className="text-[14px] font-semibold text-foreground truncate">{booth.name}</p>
+                    <p className="text-[11px] text-muted-foreground">{booth.event?.name}</p>
                   </div>
-                  <div className="flex items-center gap-1 shrink-0">
-                    <Link href={`/booths/${booth.id}/scan`} onClick={(e) => e.stopPropagation()} className="p-2 text-emerald-600 hover:bg-emerald-500/10 rounded-lg transition-colors">
+                  <div className="flex items-center gap-0.5 shrink-0">
+                    <Link href={`/booths/${booth.id}/scan`} onClick={(e) => e.stopPropagation()} className="p-1.5 text-emerald-600 hover:bg-emerald-500/10 rounded-md transition-colors">
                       <QrCode className="h-4 w-4" />
                     </Link>
-                    <button onClick={(e) => { e.stopPropagation(); openEditForm(booth); }} className="p-2 text-blue-500 hover:bg-blue-500/10 rounded-lg transition-colors">
-                      <Edit2 className="h-4 w-4" />
-                    </button>
-                    <button onClick={(e) => { e.stopPropagation(); handleDelete(booth.id); }} className="p-2 text-red-500 hover:bg-red-500/10 rounded-lg transition-colors">
-                      <Trash2 className="h-4 w-4" />
-                    </button>
+                    {isAdmin && (
+                      <button onClick={(e) => { e.stopPropagation(); openEditForm(booth); }} className="p-1.5 text-blue-500 hover:bg-blue-500/10 rounded-md transition-colors">
+                        <Edit2 className="h-4 w-4" />
+                      </button>
+                    )}
+                    {isAdmin && (
+                      <button onClick={(e) => { e.stopPropagation(); handleDelete(booth.id); }} className="p-1.5 text-red-500 hover:bg-red-500/10 rounded-md transition-colors">
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    )}
                   </div>
                 </div>
               ))

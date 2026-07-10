@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { AppShell } from "../../components/layout/AppShell";
 import { Award, Loader2, Plus, X, QrCode } from "lucide-react";
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "../../components/ui/select";
 
 type Reward = {
   id: string;
@@ -115,25 +116,25 @@ export default function RewardsPage() {
     <AppShell title="Rewards">
       <div className="space-y-4 max-w-5xl mx-auto relative z-10">
         {/* Header */}
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between apple-card p-4 sm:p-5 border-border/50 shadow-sm">
-          <div className="flex items-center gap-4">
-            <div className="flex h-12 w-12 items-center justify-center rounded-[0.8rem] bg-[#FF9500]/10">
+        <div className="flex flex-col gap-3 sm:gap-4 sm:flex-row sm:items-center sm:justify-between apple-card p-3 sm:p-5 border-border/50 shadow-sm">
+          <div className="flex items-center gap-3 sm:gap-4">
+            <div className="flex h-10 w-10 sm:h-12 sm:w-12 shrink-0 items-center justify-center rounded-lg sm:rounded-[0.8rem] bg-[#FF9500]/10">
               <Award
-                className="h-6 w-6 text-[#FF9500]"
+                className="h-5 w-5 sm:h-6 sm:w-6 text-[#FF9500]"
                 aria-hidden="true"
               />
             </div>
             <div>
-              <p className="text-2xl font-bold tracking-tight text-foreground">
+              <p className="text-xl sm:text-2xl font-bold tracking-tight text-foreground">
                 {loading ? "—" : rewards.length.toLocaleString()}
               </p>
-              <p className="text-[14px] font-medium text-muted-foreground mt-0.5">Total rewards granted</p>
+              <p className="text-[12px] sm:text-[14px] font-medium text-muted-foreground mt-0.5">Total rewards granted</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
             <Link
               href="/rewards/scan"
-              className="glow-border inline-flex items-center gap-2 rounded-full bg-emerald-500/10 px-5 py-2.5 text-[14px] font-semibold text-emerald-600 transition-all hover:bg-emerald-500/20 hover:scale-105"
+              className="glow-border inline-flex items-center justify-center gap-2 rounded-full bg-emerald-500/10 px-5 py-2.5 text-[14px] font-semibold text-emerald-600 transition-all hover:bg-emerald-500/20 hover:scale-105 w-full sm:w-auto"
             >
               <QrCode className="h-4 w-4" aria-hidden="true" />
               Scan Terminal
@@ -180,21 +181,26 @@ export default function RewardsPage() {
                 >
                   Customer
                 </label>
-                <select
-                  id="reward-customer"
+                <Select
                   value={formData.customerId}
-                  onChange={(e) =>
-                    setFormData((p) => ({ ...p, customerId: e.target.value }))
-                  }
-                  className="w-full rounded-[0.8rem] border-[0.5px] border-border/50 bg-background/50 backdrop-blur-md px-3 py-2 text-[14px] shadow-sm focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary transition-all"
+                  onValueChange={(val: string | null) => setFormData((p) => ({ ...p, customerId: val as string }))}
+                  items={[
+                    { value: "", label: "Select a customer…" },
+                    ...customers.map(c => ({ value: c.id, label: getCustomerLabel(c) }))
+                  ]}
                 >
-                  <option value="">Select a customer…</option>
-                  {customers.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {getCustomerLabel(c)}
-                    </option>
-                  ))}
-                </select>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select a customer…" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">Select a customer…</SelectItem>
+                    {customers.map((c) => (
+                      <SelectItem key={c.id} value={c.id}>
+                        {getCustomerLabel(c)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               <div>
                 <label
@@ -203,21 +209,26 @@ export default function RewardsPage() {
                 >
                   Event
                 </label>
-                <select
-                  id="reward-event"
+                <Select
                   value={formData.eventId}
-                  onChange={(e) =>
-                    setFormData((p) => ({ ...p, eventId: e.target.value }))
-                  }
-                  className="w-full rounded-[0.8rem] border-[0.5px] border-border/50 bg-background/50 backdrop-blur-md px-3 py-2 text-[14px] shadow-sm focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary transition-all"
+                  onValueChange={(val: string | null) => setFormData((p) => ({ ...p, eventId: val as string }))}
+                  items={[
+                    { value: "", label: "Select an event…" },
+                    ...events.map(ev => ({ value: ev.id, label: ev.name }))
+                  ]}
                 >
-                  <option value="">Select an event…</option>
-                  {events.map((ev) => (
-                    <option key={ev.id} value={ev.id}>
-                      {ev.name}
-                    </option>
-                  ))}
-                </select>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select an event…" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">Select an event…</SelectItem>
+                    {events.map((ev) => (
+                      <SelectItem key={ev.id} value={ev.id}>
+                        {ev.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               {formError && (
                 <p className="text-[14px] font-medium text-red-600 dark:text-red-400">
@@ -284,7 +295,7 @@ export default function RewardsPage() {
                       <td className="px-6 py-4 font-medium text-foreground">{getCustomerLabel(r.customer)}</td>
                       <td className="px-6 py-4 text-muted-foreground">{r.event?.name ?? "—"}</td>
                       <td className="px-6 py-4 text-muted-foreground">
-                        {new Date(r.createdAt).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })}
+                        {new Date(r.createdAt).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })}
                       </td>
                     </tr>
                   ))
@@ -316,16 +327,16 @@ export default function RewardsPage() {
                 const name = getCustomerLabel(r.customer);
                 const initials = name.split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase();
                 return (
-                  <div key={r.id} className="flex items-center gap-4 px-4 py-3">
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-orange-500/10 text-orange-600 text-[13px] font-bold">
+                  <div key={r.id} className="flex items-center gap-3 px-3 py-2.5">
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-orange-500/10 text-orange-600 text-[12px] font-bold">
                       {initials}
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-[14px] font-semibold text-foreground truncate">{name}</p>
-                      <p className="text-[12px] text-muted-foreground truncate">{r.event?.name ?? "—"}</p>
+                      <p className="text-[11px] text-muted-foreground truncate">{r.event?.name ?? "—"}</p>
                     </div>
-                    <p className="text-[12px] text-muted-foreground shrink-0">
-                      {new Date(r.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                    <p className="text-[11px] text-muted-foreground shrink-0">
+                      {new Date(r.createdAt).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })}
                     </p>
                   </div>
                 );

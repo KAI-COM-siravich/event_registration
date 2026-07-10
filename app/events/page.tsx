@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { AppShell } from "../../components/layout/AppShell";
+import { useSession } from "next-auth/react";
 import { CalendarDays, Loader2, Plus, Trash2, X, Edit2, Eye } from "lucide-react";
 import { DetailModal } from "../../components/ui/DetailModal";
 
@@ -14,6 +15,9 @@ type Event = {
 };
 
 export default function EventsPage() {
+  const { data: session } = useSession();
+  const isAdmin = (session?.user as any)?.role === "ADMIN";
+
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
@@ -117,29 +121,39 @@ export default function EventsPage() {
     }
   };
 
-  const mapEventForModal = (ev: Event) => ({
-    "Event ID": ev.id,
-    "Event Name": ev.name,
-    "Date & Time": new Date(ev.date).toLocaleString(),
-    "Location": ev.location,
-    "Description": ev.description || "N/A",
+  const mapEventForModal = (event: Event) => ({
+    "Event ID": event.id,
+    "Event Name": event.name,
+    "Date": new Date(event.date).toLocaleString("en-GB", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }),
+    "Location": event.location,
+    "Description": event.description || "No description provided.",
   });
+
+  if (session && !isAdmin) {
+    return (
+      <AppShell title="Event Management">
+        <div className="flex items-center justify-center h-64 text-muted-foreground">
+          You do not have permission to view this page.
+        </div>
+      </AppShell>
+    );
+  }
 
   return (
     <AppShell title="Event Management">
-      <div className="mx-auto max-w-5xl space-y-6">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="mx-auto max-w-5xl space-y-4 sm:space-y-6">
+        <div className="flex flex-col gap-3 sm:gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h2 className="text-xl font-bold tracking-tight text-foreground">
+            <h2 className="text-[17px] sm:text-xl font-bold tracking-tight text-foreground leading-tight">
               Events
             </h2>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-[13px] sm:text-sm text-muted-foreground mt-0.5">
               Manage events available for registration.
             </p>
           </div>
           <button
             onClick={openCreateForm}
-            className="inline-flex h-9 items-center justify-center gap-2 rounded-lg bg-foreground px-4 text-sm font-medium text-background transition-colors hover:bg-foreground/90"
+            className="inline-flex h-9 items-center justify-center gap-2 rounded-lg bg-foreground px-4 text-[13px] sm:text-sm font-medium text-background transition-colors hover:bg-foreground/90 w-full sm:w-auto"
           >
             <Plus className="h-4 w-4" />
             Add Event
@@ -280,8 +294,8 @@ export default function EventsPage() {
                     <tr key={event.id} className="transition-colors hover:bg-muted/30 group cursor-pointer"
                       onClick={(e) => { if ((e.target as HTMLElement).closest('button')) return; setViewedEvent(event); }}>
                       <td className="px-4 py-3 font-medium text-foreground sm:px-6 group-hover:text-primary transition-colors">{event.name}</td>
-                      <td className="px-4 py-3 text-muted-foreground sm:px-6 whitespace-nowrap">
-                        {new Date(event.date).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
+                      <td className="px-4 py-3 text-muted-foreground sm:px-6">
+                        {new Date(event.date).toLocaleString("en-GB", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })}
                       </td>
                       <td className="px-4 py-3 text-muted-foreground sm:px-6">{event.location}</td>
                       <td className="px-4 py-3 text-right sm:px-6">
@@ -323,23 +337,23 @@ export default function EventsPage() {
               </div>
             ) : (
               events.map((event) => (
-                <div key={event.id} className="p-4 flex items-start gap-3 cursor-pointer active:bg-muted/30 transition-colors"
+                <div key={event.id} className="p-3 flex items-start gap-2.5 cursor-pointer active:bg-muted/30 transition-colors"
                   onClick={() => setViewedEvent(event)}>
-                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                    <CalendarDays className="h-5 w-5" />
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[0.6rem] bg-primary/10 text-primary">
+                    <CalendarDays className="h-4 w-4" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-[15px] font-semibold text-foreground truncate">{event.name}</p>
-                    <p className="text-[12px] text-muted-foreground mt-0.5">{event.location}</p>
-                    <p className="text-[12px] text-muted-foreground">
-                      {new Date(event.date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                    <p className="text-[14px] font-semibold text-foreground truncate">{event.name}</p>
+                    <p className="text-[11px] text-muted-foreground mt-0.5">{event.location}</p>
+                    <p className="text-[11px] text-muted-foreground">
+                      {new Date(event.date).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })}
                     </p>
                   </div>
-                  <div className="flex items-center gap-1 shrink-0">
-                    <button onClick={(e) => { e.stopPropagation(); openEditForm(event); }} className="p-2 text-blue-500 hover:bg-blue-500/10 rounded-lg transition-colors">
+                  <div className="flex items-center gap-0.5 shrink-0">
+                    <button onClick={(e) => { e.stopPropagation(); openEditForm(event); }} className="p-1.5 text-blue-500 hover:bg-blue-500/10 rounded-md transition-colors">
                       <Edit2 className="h-4 w-4" />
                     </button>
-                    <button onClick={(e) => { e.stopPropagation(); handleDelete(event.id); }} className="p-2 text-red-500 hover:bg-red-500/10 rounded-lg transition-colors">
+                    <button onClick={(e) => { e.stopPropagation(); handleDelete(event.id); }} className="p-1.5 text-red-500 hover:bg-red-500/10 rounded-md transition-colors">
                       <Trash2 className="h-4 w-4" />
                     </button>
                   </div>
