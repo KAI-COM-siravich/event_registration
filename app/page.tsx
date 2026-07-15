@@ -2,10 +2,34 @@
 
 import { useEffect, useState } from "react";
 import { signIn } from "next-auth/react";
-import { Loader2 } from "lucide-react";
+import { Loader2, ShieldAlert } from "lucide-react";
 
 export default function LoginPage() {
   const [loading, setLoading] = useState(false);
+  const [authMessage, setAuthMessage] = useState<{
+    title: string;
+    description: string;
+  } | null>(null);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const error = params.get("error");
+
+    if (error === "PendingApproval") {
+      setAuthMessage({
+        title: "Waiting for System Admin approval",
+        description: "Your Microsoft 365 account has been created, but access is still pending approval from the system admin.",
+      });
+      return;
+    }
+
+    if (error === "AccessDenied") {
+      setAuthMessage({
+        title: "Access denied",
+        description: "You do not have permission to sign in to this system.",
+      });
+    }
+  }, []);
 
   const handleMicrosoftLogin = async () => {
     setLoading(true);
@@ -38,6 +62,16 @@ export default function LoginPage() {
 
         {/* Login card */}
         <div className="apple-card-hero p-6 space-y-4">
+          {authMessage && (
+            <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-3 text-left">
+              <div className="mb-1 flex items-center gap-2 text-sm font-semibold text-amber-600">
+                <ShieldAlert className="h-4 w-4" />
+                {authMessage.title}
+              </div>
+              <p className="text-xs text-muted-foreground">{authMessage.description}</p>
+            </div>
+          )}
+
           <button
             type="button"
             id="microsoft-login-btn"
