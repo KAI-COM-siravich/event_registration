@@ -376,14 +376,19 @@ const RegistrationForm = () => {
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <div>
                   <label htmlFor="reg-travelMethod" className={labelClass}>Travel Method</label>
-                  <input
-                    id="reg-travelMethod"
-                    type="text"
-                    className={inputClass}
-                    placeholder="e.g. เดินทางส่วนตัว"
+                  <Select
                     value={form.travelMethod}
-                    onChange={(e) => set("travelMethod", e.target.value)}
-                  />
+                    onValueChange={(val: string | null) => set("travelMethod", val as string)}
+                  >
+                    <SelectTrigger id="reg-travelMethod" className={inputClass}>
+                      <SelectValue placeholder="-- Select --" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">-- Select --</SelectItem>
+                      <SelectItem value="เดินทางไปด้วยตนเอง">เดินทางไปด้วยตนเอง</SelectItem>
+                      <SelectItem value="เดินทางด้วยรถบัสที่ Netcube จัดเตรียมไว้จากกรุงเทพมหานคร (รามคำแหง)">เดินทางด้วยรถบัสที่ Netcube จัดเตรียมไว้จากกรุงเทพมหานคร (รามคำแหง)</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div>
                   <label htmlFor="reg-needHotel" className={labelClass}>Need Hotel?</label>

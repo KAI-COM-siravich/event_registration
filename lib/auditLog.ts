@@ -19,7 +19,20 @@ export async function logAuditAction(action: string) {
         },
       });
     }
-  } catch (error) {
+} catch (error) {
     console.error("Failed to save audit log", error);
+  }
+}
+
+export async function logSystemAuditAction(userId: string, action: string) {
+  try {
+    await prisma.auditLog.create({
+      data: {
+        userId,
+        action,
+      },
+    });
+  } catch (error) {
+    console.error("Failed to save system audit log", error);
   }
 }

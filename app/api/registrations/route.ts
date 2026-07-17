@@ -3,6 +3,9 @@ import prisma from "@/lib/prisma";
 import { generateId } from "@/lib/idGenerator";
 import { sendEmailGraphAPI } from "@/lib/email";
 import { RegistrationSchema } from "@/lib/validations";
+import { logSystemAuditAction } from "@/lib/auditLog";
+import { getServerSession } from "next-auth";
+import { getAuthOptions } from "@/app/api/auth/[...nextauth]/route";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -28,6 +31,45 @@ export async function GET(request: Request) {
       { customer: { user: { lastName: { contains: search, mode: "insensitive" } } } },
       { event: { name: { contains: search, mode: "insensitive" } } },
     ];
+  }
+
+  const session = await getServerSession(await getAuthOptions());
+  const userEmail = session?.user?.email;
+
+  if (userEmail) {
+    const currentUser = await prisma.user.findUnique({
+      where: { email: userEmail },
+      include: { team: { include: { users: true } } },
+    });
+
+    if (currentUser && currentUser.role === "STAFF") {
+      const staffFilter: any = {};
+      
+      if (currentUser.isHeadStaff && currentUser.team) {
+        const teamEmails = currentUser.team.users.map(u => u.email);
+        if (!teamEmails.includes(userEmail)) teamEmails.push(userEmail);
+        
+        staffFilter.OR = teamEmails.map(email => ({
+          salesRep: { equals: email, mode: 'insensitive' }
+        }));
+      } else {
+        staffFilter.salesRep = { equals: userEmail, mode: 'insensitive' };
+      }
+
+      if (whereClause.OR) {
+        whereClause.AND = [
+          { OR: whereClause.OR },
+          ...(staffFilter.OR ? [{ OR: staffFilter.OR }] : [staffFilter])
+        ];
+        delete whereClause.OR;
+      } else {
+        if (staffFilter.OR) {
+          whereClause.OR = staffFilter.OR;
+        } else {
+          whereClause.salesRep = staffFilter.salesRep;
+        }
+      }
+    }
   }
 
   const [registrations, total, allStatuses] = await Promise.all([
@@ -153,6 +195,8 @@ export async function POST(request: Request) {
       event: true,
     },
   });
+
+  await logSystemAuditAction(user.id, `New Customer Registration: ${registration.event.name} - Status: ${approvalStatus}`);
 
   if (isAutoApprove) {
     const newQrCodeId = await generateId("QRCode", "ID_PREFIX_QRCODE", "QR-");

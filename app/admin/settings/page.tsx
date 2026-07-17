@@ -456,8 +456,9 @@ export default function SettingsPage() {
               </div>
             </form>
           )}
-          </div>
         </div>
+        
+      </div>
     </AppShell>
   );
 }

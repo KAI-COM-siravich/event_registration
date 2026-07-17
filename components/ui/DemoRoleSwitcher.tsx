@@ -55,7 +55,7 @@ const QUICK_LINKS: Record<string, Array<{ label: string; href: string }>> = {
 export function DemoRoleSwitcher() {
   const { data: session, update } = useSession();
   const [loading, setLoading] = useState(false);
-  const [collapsed, setCollapsed] = useState(false);
+  const [collapsed, setCollapsed] = useState(true);
   const [selectedRole, setSelectedRole] = useState<typeof ROLE_OPTIONS[number]["value"]>("ADMIN");
   const router = useRouter();
   const pathname = usePathname();

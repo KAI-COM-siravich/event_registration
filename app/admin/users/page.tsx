@@ -5,6 +5,7 @@ import { AppShell } from "../../../components/layout/AppShell";
 import { Check, X, ShieldAlert, UserCog, Loader2, Eye, ChevronLeft, ChevronRight } from "lucide-react";
 import { DetailModal } from "../../../components/ui/DetailModal";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "../../../components/ui/select";
+import { TeamManager } from "../../../components/admin/TeamManager";
 
 type User = {
   id: string;
@@ -235,6 +236,10 @@ export default function UsersPage() {
             )}
           </div>
         </div>
+        
+        {/* Teams Management Section */}
+        <TeamManager />
+        
       </div>
       <DetailModal
         isOpen={!!viewedUser}
